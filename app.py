@@ -319,13 +319,8 @@ with st.sidebar:
     st.divider()
 
 # ── HEADER — email + logout di kanan ─────────────────────────
-col_title, col_user = st.columns([5, 1])
+col_title, col_user = st.columns([6, 1])
 with col_user:
-    st.markdown(f"""
-    <div style='text-align:right; padding-top:6px; font-size:13px; color:#555'>
-        👤 {st.session_state['current_user']}
-    </div>
-    """, unsafe_allow_html=True)
     if st.button("🚪 Logout", use_container_width=True):
         st.session_state['logged_in']    = False
         st.session_state['current_user'] = ''
