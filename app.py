@@ -31,7 +31,11 @@ if 'logged_in' not in st.session_state:
 if 'current_user' not in st.session_state:
     st.session_state['current_user'] = ''
 if 'page' not in st.session_state:
-    st.session_state['page'] = 'login'   # login | forgot | register | dashboard
+    st.session_state['page'] = 'login'
+if 'manual_df' not in st.session_state:
+    st.session_state['manual_df'] = None
+if 'use_manual' not in st.session_state:
+    st.session_state['use_manual'] = False
 
 # ── CSS LOGIN ─────────────────────────────────────────────────
 st.markdown("""
@@ -216,7 +220,7 @@ def halaman_register():
 
 
 # ══════════════════════════════════════════════════════════════
-#  ROUTER — tampilkan halaman sesuai state
+#  ROUTER
 # ══════════════════════════════════════════════════════════════
 if not st.session_state['logged_in']:
     if st.session_state['page'] == 'forgot':
@@ -230,7 +234,6 @@ if not st.session_state['logged_in']:
 BULAN_ORDER = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
 FEATURES    = ['arus_kas_operasi', 'pendapatan_operasi', 'beban_operasi']
 
-# ── FUNGSI: NAMA KLASTER DINAMIS ─────────────────────────────
 def get_nama_klaster(k):
     if k == 2:
         return ['Performa Tinggi', 'Performa Rendah']
@@ -248,7 +251,6 @@ def get_nama_klaster(k):
         names.append('Performa Rendah')
         return names
 
-# ── FUNGSI: WARNA GRADASI DINAMIS ────────────────────────────
 def get_colors(k):
     if k == 1:
         return {'Performa Tinggi': '#1a9e3f'}
@@ -258,7 +260,6 @@ def get_colors(k):
     nama = get_nama_klaster(k)
     return {nama[i]: to_hex(cmap(i / max(k-1, 1))) for i in range(k)}
 
-# ── LOAD DATA ─────────────────────────────────────────────────
 @st.cache_data
 def load_data(file, sheet):
     df = pd.read_excel(file, sheet_name=sheet)
@@ -268,25 +269,22 @@ def load_data(file, sheet):
     df['bulan_num'] = df['bulan'].map({b: i+1 for i, b in enumerate(BULAN_ORDER)})
     return df
 
-# ── FUNGSI: JALANKAN CLUSTERING ───────────────────────────────
 def run_clustering(df, k):
     scaler   = StandardScaler()
     X_scaled = scaler.fit_transform(df[FEATURES].values)
     km       = KMeans(n_clusters=k, random_state=42, n_init=10)
     df       = df.copy()
     df['klaster_raw'] = km.fit_predict(X_scaled)
-
     means     = df.groupby('klaster_raw')['arus_kas_operasi'].mean()
     rank      = means.rank(ascending=False).astype(int)
     nama      = get_nama_klaster(k)
     label_map = {c: nama[r-1] for c, r in rank.items()}
     df['klaster'] = df['klaster_raw'].map(label_map)
-
     sil = silhouette_score(X_scaled, km.labels_)
     db  = davies_bouldin_score(X_scaled, km.labels_)
     return df, X_scaled, sil, db
 
-# ── SIDEBAR — judul + konfigurasi saja ───────────────────────
+# ── SIDEBAR ───────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
     <div style='background:linear-gradient(160deg,#0a3d62,#1a6fa8);
@@ -319,17 +317,17 @@ with st.sidebar:
         )
     st.divider()
 
-# ── TABS (mentok di atas, sebelum banner) ────────────────────
-tab1, tab2, tab3, tab4, tab5, tab_logout = st.tabs([
+# ── TABS ──────────────────────────────────────────────────────
+tab1, tab2, tab3, tab4, tab5, tab_manual, tab_logout = st.tabs([
     "Ringkasan Data",
     "Penentuan K Optimal",
     "Hasil Clustering",
     "Visualisasi",
     "Export",
+    "Input Manual",
     "Logout"
 ])
 
-# ── BANNER (di dalam area tab, tepat di bawah navigasi) ──────
 BANNER_HTML = """
 <div style="background:linear-gradient(135deg,#0a3d62 0%,#1a6fa8 60%,#2980b9 100%);
             padding:28px 36px; border-radius:12px; margin-bottom:24px;
@@ -348,19 +346,129 @@ BANNER_HTML = """
 </div>
 """
 
-data_loaded = uploaded_file is not None
+# ═══════════════════════════════════════════════════════════════
+# TAB INPUT MANUAL (tidak butuh file upload)
+# ═══════════════════════════════════════════════════════════════
+with tab_manual:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
+    st.subheader("📥 Input Data Manual")
+    st.markdown("Isi tabel di bawah sesuai data keuangan. Data ini bisa langsung digunakan untuk analisis clustering.")
+
+    col_r, col_k = st.columns([1, 1])
+    with col_r:
+        n_baris = st.number_input("Jumlah baris (bulan)", min_value=1, max_value=200, value=12, step=1, key="n_baris")
+    with col_k:
+        st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+        st.caption(f"Tabel akan memiliki **{n_baris} baris** × **5 kolom** (Tahun, Bulan, Arus Kas, Pendapatan, Beban)")
+
+    # Buat template default atau pertahankan data yang sudah ada
+    if st.session_state['manual_df'] is not None and len(st.session_state['manual_df']) == n_baris:
+        default_data = st.session_state['manual_df']
+    else:
+        bulan_cycle = BULAN_ORDER * (n_baris // 12 + 1)
+        tahun_list  = []
+        bulan_list  = []
+        tahun_awal  = 2018
+        for i in range(n_baris):
+            tahun_list.append(tahun_awal + i // 12)
+            bulan_list.append(bulan_cycle[i % 12])
+        default_data = pd.DataFrame({
+            'tahun':              tahun_list,
+            'bulan':              bulan_list,
+            'arus_kas_operasi':   [0.0] * n_baris,
+            'pendapatan_operasi': [0.0] * n_baris,
+            'beban_operasi':      [0.0] * n_baris,
+        })
+
+    st.markdown("**Isi tabel berikut (satuan: juta Rp):**")
+    edited_df = st.data_editor(
+        default_data,
+        use_container_width=True,
+        num_rows="fixed",
+        column_config={
+            "tahun": st.column_config.NumberColumn(
+                "Tahun", min_value=2000, max_value=2100, step=1, format="%d"
+            ),
+            "bulan": st.column_config.SelectboxColumn(
+                "Bulan", options=BULAN_ORDER
+            ),
+            "arus_kas_operasi": st.column_config.NumberColumn(
+                "Arus Kas Operasi (juta Rp)", format="%.2f"
+            ),
+            "pendapatan_operasi": st.column_config.NumberColumn(
+                "Pendapatan Operasi (juta Rp)", format="%.2f"
+            ),
+            "beban_operasi": st.column_config.NumberColumn(
+                "Beban Operasi (juta Rp)", format="%.2f"
+            ),
+        },
+        key="editor_manual"
+    )
+
+    col_s, col_g, col_r2 = st.columns([1, 1, 1])
+    with col_s:
+        if st.button("💾 Simpan & Gunakan Data Ini", use_container_width=True, type="primary"):
+            # Validasi
+            if edited_df[FEATURES].isnull().any().any():
+                st.error("Ada nilai kosong. Pastikan semua sel terisi.")
+            elif (edited_df[FEATURES] == 0).all().all():
+                st.warning("Semua nilai masih 0. Silakan isi data terlebih dahulu.")
+            else:
+                df_manual = edited_df.copy()
+                df_manual['tahun']     = df_manual['tahun'].astype(int)
+                df_manual['bulan_num'] = df_manual['bulan'].map({b: i+1 for i, b in enumerate(BULAN_ORDER)})
+                st.session_state['manual_df']  = df_manual
+                st.session_state['use_manual'] = True
+                st.success("✅ Data manual berhasil disimpan dan akan digunakan untuk analisis!")
+                st.rerun()
+    with col_g:
+        if st.button("🗑️ Reset Data Manual", use_container_width=True):
+            st.session_state['manual_df']  = None
+            st.session_state['use_manual'] = False
+            st.rerun()
+    with col_r2:
+        # Download template kosong
+        buf_tmpl = io.BytesIO()
+        template = pd.DataFrame({
+            'tahun': [''] * 12,
+            'bulan': BULAN_ORDER,
+            'arus_kas_operasi': [''] * 12,
+            'pendapatan_operasi': [''] * 12,
+            'beban_operasi': [''] * 12,
+        })
+        with pd.ExcelWriter(buf_tmpl, engine='openpyxl') as w:
+            template.to_excel(w, index=False, sheet_name='bulanan')
+        buf_tmpl.seek(0)
+        st.download_button(
+            "📄 Download Template Excel",
+            data=buf_tmpl,
+            file_name="template_input.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True
+        )
+
+    if st.session_state['use_manual'] and st.session_state['manual_df'] is not None:
+        st.success("✅ Data manual **aktif** — tab Ringkasan, Clustering, dan Visualisasi menggunakan data ini.")
+        st.dataframe(st.session_state['manual_df'], use_container_width=True, height=250)
+    elif uploaded_file is not None:
+        st.info("ℹ️ Saat ini menggunakan data dari file Excel yang di-upload.")
+
+# ── Tentukan sumber data ──────────────────────────────────────
+use_manual_data = st.session_state['use_manual'] and st.session_state['manual_df'] is not None
+data_loaded     = uploaded_file is not None or use_manual_data
+
 if not data_loaded:
     with tab1:
         st.markdown(BANNER_HTML, unsafe_allow_html=True)
-        st.info("Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar **atau** isi data manual di tab **Input Manual** untuk memulai analisis.")
     with tab2:
-        st.info("Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
     with tab3:
-        st.info("Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
     with tab4:
-        st.info("Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
     with tab5:
-        st.info("Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
     with tab_logout:
         col_l, col_m, col_r = st.columns([1, 1.2, 1])
         with col_m:
@@ -373,7 +481,12 @@ if not data_loaded:
                 st.rerun()
     st.stop()
 
-df_raw = load_data(uploaded_file, sheet_name)
+# ── Load data dari sumber yang aktif ─────────────────────────
+if use_manual_data:
+    df_raw = st.session_state['manual_df'].copy()
+else:
+    df_raw = load_data(uploaded_file, sheet_name)
+
 df, X_scaled, sil, db = run_clustering(df_raw, K)
 COLORS = get_colors(K)
 NAMA_K = get_nama_klaster(K)
@@ -384,6 +497,8 @@ aktif  = [n for n in NAMA_K if n in df['klaster'].values]
 # ═══════════════════════════════════════════════════════════════
 with tab1:
     st.markdown(BANNER_HTML, unsafe_allow_html=True)
+    if use_manual_data:
+        st.info("📋 Menggunakan **data manual** yang diinput di tab Input Manual.")
     st.subheader("Ringkasan Data")
 
     c1, c2, c3, c4 = st.columns(4)
@@ -544,7 +659,6 @@ with tab4:
 
     df_s = df.sort_values(['tahun','bulan_num']).reset_index(drop=True)
 
-    # ── Grafik 1: Tren arus kas bulanan
     st.markdown("#### Tren Arus Kas Operasi Bulanan")
     fig1, ax1 = plt.subplots(figsize=(14, 4))
     fig1.patch.set_facecolor('#FAFAFA')
@@ -568,8 +682,6 @@ with tab4:
     plt.tight_layout(); st.pyplot(fig1)
 
     c1, c2 = st.columns(2)
-
-    # ── Grafik 2: Scatter pendapatan vs arus kas
     with c1:
         st.markdown("#### Pendapatan vs Arus Kas")
         fig2, ax2 = plt.subplots(figsize=(6,4))
@@ -584,7 +696,6 @@ with tab4:
         ax2.legend(fontsize=7); ax2.grid(alpha=0.25); ax2.set_facecolor('white')
         plt.tight_layout(); st.pyplot(fig2)
 
-    # ── Grafik 3: Distribusi klaster per tahun
     with c2:
         st.markdown("#### Distribusi Klaster per Tahun")
         fig3, ax3 = plt.subplots(figsize=(6,4))
@@ -599,7 +710,6 @@ with tab4:
         ax3.legend(fontsize=7); ax3.grid(axis='y', alpha=0.25); ax3.set_facecolor('white')
         plt.tight_layout(); st.pyplot(fig3)
 
-    # ── Grafik 4: Heatmap
     st.markdown("#### Heatmap Klaster Per Bulan Per Tahun")
     klaster_num_map   = {kl: i for i, kl in enumerate(aktif)}
     df['klaster_num'] = df['klaster'].map(klaster_num_map)
