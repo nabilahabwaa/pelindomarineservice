@@ -296,9 +296,6 @@ with st.sidebar:
             PT PELINDO MARINE SERVICE
         </div>
         <div style='width:40px; height:2px; background:#aed6f1; margin:8px auto'></div>
-        <div style='font-size:11px; color:#d6eaf8; line-height:1.5'>
-            Divisi Keuangan
-        </div>
     </div>
     """, unsafe_allow_html=True)
     st.divider()
