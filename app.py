@@ -289,12 +289,16 @@ def run_clustering(df, k):
 # ── SIDEBAR — judul + konfigurasi saja ───────────────────────
 with st.sidebar:
     st.markdown("""
-    <div style='text-align:center; margin-bottom:6px'>
-        <span style='font-size:32px'>🚢</span>
-    </div>
-    <div style='text-align:center; font-size:14px; font-weight:700; color:#1a252f; line-height:1.4; margin-bottom:4px'>
-        SISTEM MONITORING ARUS KAS OPERASIONAL PT PELINDO MARINE SERVICE
-        MENGGUNAKAN K-MEANS CLUSTERING BERBASIS DASHBOARD INTERAKTIF
+    <div style='background:linear-gradient(160deg,#0a3d62,#1a6fa8);
+                border-radius:10px; padding:20px 16px; margin-bottom:4px; text-align:center'>
+        <div style='font-size:36px; margin-bottom:8px'>🚢</div>
+        <div style='font-size:11px; color:#aed6f1; letter-spacing:2px; font-weight:700; margin-bottom:4px'>
+            PT PELINDO MARINE SERVICE
+        </div>
+        <div style='width:40px; height:2px; background:#aed6f1; margin:8px auto'></div>
+        <div style='font-size:11px; color:#d6eaf8; line-height:1.5'>
+            Divisi Keuangan
+        </div>
     </div>
     """, unsafe_allow_html=True)
     st.divider()
@@ -318,13 +322,23 @@ with st.sidebar:
         )
     st.divider()
 
-# ── HEADER BANNER ────────────────────────────────────────────
-st.markdown("""
+# ── TABS (mentok di atas, sebelum banner) ────────────────────
+tab1, tab2, tab3, tab4, tab5, tab_logout = st.tabs([
+    "📊 Ringkasan Data",
+    "🔍 Penentuan K Optimal",
+    "🎯 Hasil Clustering",
+    "📈 Visualisasi",
+    "💾 Export",
+    "🚪 Logout"
+])
+
+# ── BANNER (di dalam area tab, tepat di bawah navigasi) ──────
+BANNER_HTML = """
 <div style="background:linear-gradient(135deg,#0a3d62 0%,#1a6fa8 60%,#2980b9 100%);
             padding:28px 36px; border-radius:12px; margin-bottom:24px;
             display:flex; align-items:center; gap:24px">
     <div>
-        <div style="font-size:13px; color:#aed6f1; font-weight:600; letter-spacing:2px; margin-bottom:4px">
+        <div style="font-size:12px; color:#aed6f1; font-weight:700; letter-spacing:2px; margin-bottom:4px">
             PT PELINDO MARINE SERVICE
         </div>
         <div style="font-size:22px; font-weight:800; color:white; line-height:1.3">
@@ -335,21 +349,12 @@ st.markdown("""
         </div>
     </div>
 </div>
-""", unsafe_allow_html=True)
-
-# ── TABS ─────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5, tab_logout = st.tabs([
-    "📊 Ringkasan Data",
-    "🔍 Penentuan K Optimal",
-    "🎯 Hasil Clustering",
-    "📈 Visualisasi",
-    "💾 Export",
-    "🚪 Logout"
-])
+"""
 
 data_loaded = uploaded_file is not None
 if not data_loaded:
     with tab1:
+        st.markdown(BANNER_HTML, unsafe_allow_html=True)
         st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
     with tab2:
         st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
@@ -381,6 +386,7 @@ aktif  = [n for n in NAMA_K if n in df['klaster'].values]
 # TAB 1 — RINGKASAN DATA
 # ═══════════════════════════════════════════════════════════════
 with tab1:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Ringkasan Data")
 
     c1, c2, c3, c4 = st.columns(4)
@@ -426,6 +432,7 @@ with tab1:
 # TAB 2 — PENENTUAN K OPTIMAL
 # ═══════════════════════════════════════════════════════════════
 with tab2:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Penentuan K Optimal")
 
     scaler_opt = StandardScaler()
@@ -490,6 +497,7 @@ with tab2:
 # TAB 3 — HASIL CLUSTERING
 # ═══════════════════════════════════════════════════════════════
 with tab3:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader(f"Hasil K-Means Clustering (K={K})")
 
     c1, c2 = st.columns(2)
@@ -534,6 +542,7 @@ with tab3:
 # TAB 4 — VISUALISASI
 # ═══════════════════════════════════════════════════════════════
 with tab4:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Visualisasi Hasil Clustering")
 
     df_s = df.sort_values(['tahun','bulan_num']).reset_index(drop=True)
@@ -625,6 +634,7 @@ with tab4:
 # TAB 5 — EXPORT
 # ═══════════════════════════════════════════════════════════════
 with tab5:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Export Hasil")
 
     out_cols = ['tahun','bulan','arus_kas_operasi','pendapatan_operasi','beban_operasi','klaster']
