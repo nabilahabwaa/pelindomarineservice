@@ -301,7 +301,7 @@ with st.sidebar:
     st.header("⚙️ Konfigurasi")
     uploaded_file = st.file_uploader("Upload file Excel (.xlsx)", type=["xlsx"])
     sheet_name    = st.text_input("Nama sheet", value="bulanan")
-    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=3)
+    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=4)
 
     st.divider()
     st.markdown("**Preview Klaster**")
