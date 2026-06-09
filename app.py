@@ -461,12 +461,12 @@ with tab5:
             st.metric("MAE",  f"{r['mae']:,.0f}", help="Rata-rata error absolut (juta Rp)")
             st.metric("RMSE", f"{r['rmse']:,.0f}",help="Root mean squared error (juta Rp)")
 
-    with st.expander("ℹ️ Cara membaca metrik ini"):
+    with st.expander("ℹ️ Cara membaca metrik"):
         st.markdown("""
-- **R²** — seberapa baik garis tren cocok dengan data historis. Nilai ≥ 0.7 sangat baik, 0.5–0.7 cukup, < 0.3 artinya data terlalu fluktuatif untuk tren linear.
+- **R²** — seberapa baik garis tren cocok dengan data historis. Nilai ≥ 0.7 sangat baik, 0.5–0.7 cukup, < 0.3 data terlalu fluktuatif untuk tren linear.
 - **MAE** — rata-rata selisih antara nilai aktual dan prediksi (juta Rp). Makin kecil makin akurat.
 - **RMSE** — mirip MAE tapi lebih sensitif terhadap error yang besar.
-- R² arus kas yang rendah bukan berarti model salah — bisa jadi memang arus kas sangat fluktuatif.
+- R² arus kas yang rendah bukan berarti model salah, bisa jadi memang arus kas sangat fluktuatif.
         """)
 
     st.divider()
