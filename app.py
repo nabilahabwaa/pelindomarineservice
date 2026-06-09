@@ -91,7 +91,7 @@ with st.sidebar:
     st.header("⚙️ Konfigurasi")
     uploaded_file = st.file_uploader("Upload file Excel (.xlsx)", type=["xlsx"])
     sheet_name    = st.text_input("Nama sheet", value="bulanan")
-    K             = st.slider("Jumlah Klaster (K)", min_value=2, max_value=8, value=4)
+    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=4)
 
     # Preview nama & warna klaster
     st.divider()
@@ -109,8 +109,8 @@ with st.sidebar:
     st.divider()
 
 # ── HEADER ───────────────────────────────────────────────────
-st.title("🚢 Analisis K-Means Clustering")
-st.markdown("**PT Pelindo Marine Service 2018–2024** — Kinerja Keuangan Operasional")
+st.title("SISTEM MONITORING ARUS KAS OPERASIONAL 
+PT PELINDO MARINE SERVICE MENGGUNAKAN K-MEANS CLUSTERING BERBASIS DASHBOARD INTERAKTIF")
 st.divider()
 
 if uploaded_file is None:
