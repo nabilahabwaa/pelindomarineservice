@@ -91,7 +91,7 @@ with st.sidebar:
     st.header("⚙️ Konfigurasi")
     uploaded_file = st.file_uploader("Upload file Excel (.xlsx)", type=["xlsx"])
     sheet_name    = st.text_input("Nama sheet", value="bulanan")
-    K             = st.slider("Jumlah Klaster (K)", min_value=2, max_value=8, value=3)
+    K             = st.slider("Jumlah Klaster (K)", min_value=2, max_value=8, value=4)
 
     # Preview nama & warna klaster
     st.divider()
@@ -457,7 +457,7 @@ with tab5:
         with met_cols[i]:
             st.markdown(f"**{VAR_LABELS[var]}**")
             # Warna R² — hijau jika >= 0.5, kuning jika >= 0.3, merah jika < 0.3
-            st.metric("R²",   f"{r['r2']:.4f}",  delta=r2_delta, delta_color="off",
+            st.metric("R²",   f"{r['r2']:.4f}",
                       help="Mendekati 1 = fit sangat baik")
             st.metric("MAE",  f"{r['mae']:,.0f}", help="Rata-rata error absolut (juta Rp)")
             st.metric("RMSE", f"{r['rmse']:,.0f}",help="Root mean squared error (juta Rp)")
