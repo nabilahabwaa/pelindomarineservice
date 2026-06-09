@@ -107,7 +107,6 @@ with st.sidebar:
             unsafe_allow_html=True
         )
     st.divider()
-    st.caption("PKL — Analisis Kinerja Keuangan")
 
 # ── HEADER ───────────────────────────────────────────────────
 st.title("🚢 Analisis K-Means Clustering")
@@ -166,7 +165,7 @@ with tab1:
                          'p-value': round(p,4),
                          'Distribusi': 'Normal' if p > 0.05 else 'Tidak Berdistribusi Normal'})
         st.dataframe(pd.DataFrame(rows).set_index('Variabel'), use_container_width=True)
-        st.caption("→ Data tidak normal → normalisasi Z-Score tepat digunakan sebelum clustering.")
+        st.caption("→ Data tidak berdistribusi normal → normalisasi Z-Score tepat digunakan sebelum clustering.")
 
     st.subheader("Rasio Arus Kas / Pendapatan per Tahun (%)")
     rasio = df.groupby('tahun').apply(
@@ -467,7 +466,7 @@ with tab5:
 - **R²** — seberapa baik garis tren cocok dengan data historis. Nilai ≥ 0.7 sangat baik, 0.5–0.7 cukup, < 0.3 artinya data terlalu fluktuatif untuk tren linear.
 - **MAE** — rata-rata selisih antara nilai aktual dan prediksi (juta Rp). Makin kecil makin akurat.
 - **RMSE** — mirip MAE tapi lebih sensitif terhadap error yang besar.
-- R² arus kas yang rendah bukan berarti model salah — bisa jadi memang arus kas sangat fluktuatif. Hal ini bisa dijadikan temuan di laporan PKL.
+- R² arus kas yang rendah bukan berarti model salah — bisa jadi memang arus kas sangat fluktuatif.
         """)
 
     st.divider()
