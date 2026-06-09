@@ -227,16 +227,6 @@ if not st.session_state['logged_in']:
         halaman_login()
     st.stop()
 
-# Tombol logout di sidebar (hanya muncul setelah login)
-with st.sidebar:
-    st.markdown(f"👤 **{st.session_state['current_user']}**")
-    if st.button("🚪 Logout", use_container_width=True):
-        st.session_state['logged_in']   = False
-        st.session_state['current_user'] = ''
-        st.session_state['page']         = 'login'
-        st.rerun()
-    st.divider()
-
 BULAN_ORDER = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
 FEATURES    = ['arus_kas_operasi', 'pendapatan_operasi', 'beban_operasi']
 
@@ -296,12 +286,23 @@ def run_clustering(df, k):
     db  = davies_bouldin_score(X_scaled, km.labels_)
     return df, X_scaled, sil, db
 
-# ── SIDEBAR ───────────────────────────────────────────────────
+# ── SIDEBAR — judul + konfigurasi saja ───────────────────────
 with st.sidebar:
+    st.markdown("""
+    <div style='text-align:center; margin-bottom:6px'>
+        <span style='font-size:32px'>🚢</span>
+    </div>
+    <div style='text-align:center; font-size:14px; font-weight:700; color:#1a252f; line-height:1.4; margin-bottom:4px'>
+        SISTEM MONITORING ARUS KAS OPERASIONAL PT PELINDO MARINE SERVICE
+        MENGGUNAKAN K-MEANS CLUSTERING BERBASIS DASHBOARD INTERAKTIF
+    </div>
+    """, unsafe_allow_html=True)
+    st.divider()
+
     st.header("⚙️ Konfigurasi")
     uploaded_file = st.file_uploader("Upload file Excel (.xlsx)", type=["xlsx"])
     sheet_name    = st.text_input("Nama sheet", value="bulanan")
-    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=4)
+    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=3)
 
     st.divider()
     st.markdown("**Preview Klaster**")
@@ -317,8 +318,19 @@ with st.sidebar:
         )
     st.divider()
 
-# ── HEADER ───────────────────────────────────────────────────
-st.title("SISTEM MONITORING ARUS KAS OPERASIONAL PT PELINDO MARINE SERVICE MENGGUNAKAN K-MEANS CLUSTERING BERBASIS DASHBOARD INTERAKTIF")
+# ── HEADER — email + logout di kanan ─────────────────────────
+col_title, col_user = st.columns([5, 1])
+with col_user:
+    st.markdown(f"""
+    <div style='text-align:right; padding-top:6px; font-size:13px; color:#555'>
+        👤 {st.session_state['current_user']}
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🚪 Logout", use_container_width=True):
+        st.session_state['logged_in']    = False
+        st.session_state['current_user'] = ''
+        st.session_state['page']         = 'login'
+        st.rerun()
 st.divider()
 
 if uploaded_file is None:
