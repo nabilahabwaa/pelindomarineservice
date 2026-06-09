@@ -318,16 +318,6 @@ with st.sidebar:
         )
     st.divider()
 
-# ── HEADER — email + logout di kanan ─────────────────────────
-col_title, col_user = st.columns([6, 1])
-with col_user:
-    if st.button("🚪 Logout", use_container_width=True):
-        st.session_state['logged_in']    = False
-        st.session_state['current_user'] = ''
-        st.session_state['page']         = 'login'
-        st.rerun()
-st.divider()
-
 if uploaded_file is None:
     st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
     st.stop()
@@ -338,13 +328,14 @@ COLORS = get_colors(K)
 NAMA_K = get_nama_klaster(K)
 aktif  = [n for n in NAMA_K if n in df['klaster'].values]
 
-# ── TABS ──────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+# ── TABS + LOGOUT sejajar ─────────────────────────────────────
+tab1, tab2, tab3, tab4, tab5, tab_logout = st.tabs([
     "📊 Ringkasan Data",
     "🔍 Penentuan K Optimal",
     "🎯 Hasil Clustering",
     "📈 Visualisasi",
-    "💾 Export"
+    "💾 Export",
+    "🚪 Logout"
 ])
 
 # ═══════════════════════════════════════════════════════════════
@@ -612,3 +603,27 @@ with tab5:
         file_name="hasil_clustering.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+# ═══════════════════════════════════════════════════════════════
+# TAB LOGOUT
+# ═══════════════════════════════════════════════════════════════
+with tab_logout:
+    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+    col_l, col_m, col_r = st.columns([1, 1.2, 1])
+    with col_m:
+        st.markdown("""
+        <div style='text-align:center; font-size:48px; margin-bottom:12px'>🚪</div>
+        <div style='text-align:center; font-size:18px; font-weight:600; color:#2c3e50; margin-bottom:8px'>
+            Yakin ingin keluar?
+        </div>
+        <div style='text-align:center; font-size:13px; color:#7f8c8d; margin-bottom:24px'>
+            Sesi Anda akan diakhiri dan Anda akan kembali ke halaman login.
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("🚪 Ya, Logout", use_container_width=True, type="primary"):
+            st.session_state['logged_in']    = False
+            st.session_state['current_user'] = ''
+            st.session_state['page']         = 'login'
+            st.rerun()
+        if st.button("↩️ Batal", use_container_width=True):
+            pass
