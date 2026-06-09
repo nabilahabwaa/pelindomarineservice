@@ -401,7 +401,7 @@ with tab5:
     # ── Kontrol periode forecast ──────────────────────────────
     col_ctrl1, col_ctrl2 = st.columns([2, 1])
     with col_ctrl1:
-        FORECAST_N = st.slider(
+        FORECAST_N = st.number_input(
             "Jumlah bulan yang ingin di-forecast",
             min_value=1, max_value=60, value=12, step=1,
             help="Maksimal 60 bulan (5 tahun ke depan)"
