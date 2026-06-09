@@ -7,8 +7,7 @@ from matplotlib.colors import ListedColormap, to_hex
 import matplotlib.colors as mcolors
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, davies_bouldin_score, mean_absolute_error, mean_squared_error, r2_score
-from sklearn.linear_model import LinearRegression
+from sklearn.metrics import silhouette_score, davies_bouldin_score
 from scipy import stats
 import io
 import warnings
@@ -22,12 +21,227 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# ── DATABASE AKUN (session state) ────────────────────────────
+if 'accounts' not in st.session_state:
+    st.session_state['accounts'] = {
+        'keuanganpms@gmail.com': 'keuangan123'
+    }
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+if 'current_user' not in st.session_state:
+    st.session_state['current_user'] = ''
+if 'page' not in st.session_state:
+    st.session_state['page'] = 'login'   # login | forgot | register | dashboard
+
+# ── CSS LOGIN ─────────────────────────────────────────────────
+st.markdown("""
+<style>
+    .login-container {
+        max-width: 420px;
+        margin: 60px auto;
+        background: white;
+        border-radius: 16px;
+        padding: 40px 36px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    .login-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a252f;
+        margin-bottom: 4px;
+    }
+    .login-sub {
+        font-size: 13px;
+        color: #7f8c8d;
+        margin-bottom: 24px;
+    }
+    .link-btn {
+        background: none;
+        border: none;
+        color: #2980b9;
+        cursor: pointer;
+        font-size: 13px;
+        padding: 0;
+        text-decoration: underline;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════
+#  HALAMAN LOGIN
+# ══════════════════════════════════════════════════════════════
+def halaman_login():
+    col_l, col_m, col_r = st.columns([1, 1.4, 1])
+    with col_m:
+        st.markdown("""
+        <div style='text-align:center; margin-bottom: 8px'>
+            <span style='font-size:40px'>🚢</span>
+        </div>
+        <div style='text-align:center; font-size:20px; font-weight:700; color:#1a252f; margin-bottom:4px'>
+            PT Pelindo Marine Service
+        </div>
+        <div style='text-align:center; font-size:13px; color:#7f8c8d; margin-bottom:28px'>
+            Sistem Monitoring Arus Kas Operasional
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.form("form_login"):
+            st.markdown("**Email**")
+            email = st.text_input("Email", placeholder="Masukkan email", label_visibility="collapsed")
+            st.markdown("**Password**")
+            password = st.text_input("Password", type="password", placeholder="Masukkan password", label_visibility="collapsed")
+            st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
+            login_btn = st.form_submit_button("Masuk", use_container_width=True, type="primary")
+
+        if login_btn:
+            accounts = st.session_state['accounts']
+            if email == '':
+                st.error("Email tidak boleh kosong.")
+            elif email not in accounts:
+                st.error("Email tidak terdaftar.")
+            elif accounts[email] != password:
+                st.error("Password salah.")
+            else:
+                st.session_state['logged_in']   = True
+                st.session_state['current_user'] = email
+                st.session_state['page']         = 'dashboard'
+                st.rerun()
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            if st.button("🔑 Lupa Password?", use_container_width=True):
+                st.session_state['page'] = 'forgot'
+                st.rerun()
+        with col_b:
+            if st.button("📝 Buat Akun Baru", use_container_width=True):
+                st.session_state['page'] = 'register'
+                st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════
+#  HALAMAN LUPA PASSWORD
+# ══════════════════════════════════════════════════════════════
+def halaman_lupa_password():
+    col_l, col_m, col_r = st.columns([1, 1.4, 1])
+    with col_m:
+        st.markdown("""
+        <div style='text-align:center; font-size:36px; margin-bottom:8px'>🔑</div>
+        <div style='text-align:center; font-size:20px; font-weight:700; color:#1a252f; margin-bottom:4px'>
+            Lupa Password
+        </div>
+        <div style='text-align:center; font-size:13px; color:#7f8c8d; margin-bottom:24px'>
+            Masukkan email terdaftar untuk melihat password Anda
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.form("form_forgot"):
+            st.markdown("**Email**")
+            email_cek = st.text_input("Email", placeholder="Masukkan email terdaftar", label_visibility="collapsed")
+            cek_btn   = st.form_submit_button("Cari Password", use_container_width=True, type="primary")
+
+        if cek_btn:
+            accounts = st.session_state['accounts']
+            if email_cek == '':
+                st.error("Email tidak boleh kosong.")
+            elif email_cek not in accounts:
+                st.error("Email tidak ditemukan. Pastikan email sudah terdaftar.")
+            else:
+                password_ditemukan = accounts[email_cek]
+                st.success(f"✅ Password untuk **{email_cek}** adalah:")
+                st.markdown(f"""
+                <div style='background:#eaf4fb; border:1.5px solid #2980b9; border-radius:8px;
+                            padding:14px 18px; font-size:20px; font-weight:700;
+                            color:#1a252f; text-align:center; letter-spacing:2px;
+                            margin-top:8px'>
+                    {password_ditemukan}
+                </div>
+                """, unsafe_allow_html=True)
+                st.caption("Simpan password Anda di tempat yang aman.")
+
+        st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
+        if st.button("← Kembali ke Login", use_container_width=True):
+            st.session_state['page'] = 'login'
+            st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════
+#  HALAMAN DAFTAR AKUN BARU
+# ══════════════════════════════════════════════════════════════
+def halaman_register():
+    col_l, col_m, col_r = st.columns([1, 1.4, 1])
+    with col_m:
+        st.markdown("""
+        <div style='text-align:center; font-size:36px; margin-bottom:8px'>📝</div>
+        <div style='text-align:center; font-size:20px; font-weight:700; color:#1a252f; margin-bottom:4px'>
+            Buat Akun Baru
+        </div>
+        <div style='text-align:center; font-size:13px; color:#7f8c8d; margin-bottom:24px'>
+            Daftarkan akun untuk mengakses dashboard
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.form("form_register"):
+            st.markdown("**Email**")
+            email_baru = st.text_input("Email baru", placeholder="contoh@gmail.com", label_visibility="collapsed")
+            st.markdown("**Password**")
+            pass_baru  = st.text_input("Password baru", type="password",
+                                        placeholder="Minimal 6 karakter", label_visibility="collapsed")
+            st.markdown("**Konfirmasi Password**")
+            pass_konfirm = st.text_input("Konfirmasi password", type="password",
+                                          placeholder="Ulangi password", label_visibility="collapsed")
+            daftar_btn = st.form_submit_button("Daftar", use_container_width=True, type="primary")
+
+        if daftar_btn:
+            accounts = st.session_state['accounts']
+            if email_baru == '' or pass_baru == '':
+                st.error("Email dan password tidak boleh kosong.")
+            elif '@' not in email_baru or '.' not in email_baru:
+                st.error("Format email tidak valid.")
+            elif len(pass_baru) < 6:
+                st.error("Password minimal 6 karakter.")
+            elif pass_baru != pass_konfirm:
+                st.error("Konfirmasi password tidak cocok.")
+            elif email_baru in accounts:
+                st.error("Email sudah terdaftar. Silakan login atau gunakan email lain.")
+            else:
+                st.session_state['accounts'][email_baru] = pass_baru
+                st.success(f"✅ Akun **{email_baru}** berhasil dibuat! Silakan login.")
+                st.balloons()
+
+        st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
+        if st.button("← Kembali ke Login", use_container_width=True):
+            st.session_state['page'] = 'login'
+            st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════
+#  ROUTER — tampilkan halaman sesuai state
+# ══════════════════════════════════════════════════════════════
+if not st.session_state['logged_in']:
+    if st.session_state['page'] == 'forgot':
+        halaman_lupa_password()
+    elif st.session_state['page'] == 'register':
+        halaman_register()
+    else:
+        halaman_login()
+    st.stop()
+
+# Tombol logout di sidebar (hanya muncul setelah login)
+with st.sidebar:
+    st.markdown(f"👤 **{st.session_state['current_user']}**")
+    if st.button("🚪 Logout", use_container_width=True):
+        st.session_state['logged_in']   = False
+        st.session_state['current_user'] = ''
+        st.session_state['page']         = 'login'
+        st.rerun()
+    st.divider()
+
 BULAN_ORDER = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
 FEATURES    = ['arus_kas_operasi', 'pendapatan_operasi', 'beban_operasi']
 
 # ── FUNGSI: NAMA KLASTER DINAMIS ─────────────────────────────
 def get_nama_klaster(k):
-    """Hasilkan nama klaster dari tertinggi ke terendah sesuai K."""
     if k == 2:
         return ['Performa Tinggi', 'Performa Rendah']
     elif k == 3:
@@ -38,7 +252,6 @@ def get_nama_klaster(k):
         return ['Performa Tinggi', 'Performa Sedang Atas', 'Performa Sedang',
                 'Performa Sedang Bawah', 'Performa Rendah']
     else:
-        # K >= 6: Tinggi, Level 2, Level 3, ..., Rendah
         names = ['Performa Tinggi']
         for i in range(2, k):
             names.append(f'Performa Level {i}')
@@ -47,10 +260,8 @@ def get_nama_klaster(k):
 
 # ── FUNGSI: WARNA GRADASI DINAMIS ────────────────────────────
 def get_colors(k):
-    """Gradasi hijau → kuning → merah sesuai jumlah klaster."""
     if k == 1:
         return {'Performa Tinggi': '#1a9e3f'}
-    # Buat gradasi dari hijau (#1a9e3f) → kuning (#f39c12) → merah (#e74c3c)
     cmap = mcolors.LinearSegmentedColormap.from_list(
         'klaster', ['#1a9e3f', '#f39c12', '#e74c3c'], N=k
     )
@@ -63,7 +274,7 @@ def load_data(file, sheet):
     df = pd.read_excel(file, sheet_name=sheet)
     df = df[df['tahun'] != 'Total'].copy()
     df = df[df['bulan'].notna()].copy()
-    df['tahun']    = df['tahun'].ffill().astype(float).astype(int)
+    df['tahun']     = df['tahun'].ffill().astype(float).astype(int)
     df['bulan_num'] = df['bulan'].map({b: i+1 for i, b in enumerate(BULAN_ORDER)})
     return df
 
@@ -75,10 +286,9 @@ def run_clustering(df, k):
     df       = df.copy()
     df['klaster_raw'] = km.fit_predict(X_scaled)
 
-    # Urutkan klaster berdasarkan rata-rata arus kas (tertinggi = klaster 0)
-    means    = df.groupby('klaster_raw')['arus_kas_operasi'].mean()
-    rank     = means.rank(ascending=False).astype(int)
-    nama     = get_nama_klaster(k)
+    means     = df.groupby('klaster_raw')['arus_kas_operasi'].mean()
+    rank      = means.rank(ascending=False).astype(int)
+    nama      = get_nama_klaster(k)
     label_map = {c: nama[r-1] for c, r in rank.items()}
     df['klaster'] = df['klaster_raw'].map(label_map)
 
@@ -91,13 +301,12 @@ with st.sidebar:
     st.header("⚙️ Konfigurasi")
     uploaded_file = st.file_uploader("Upload file Excel (.xlsx)", type=["xlsx"])
     sheet_name    = st.text_input("Nama sheet", value="bulanan")
-    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=4)
+    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=3)
 
-    # Preview nama & warna klaster
     st.divider()
     st.markdown("**Preview Klaster**")
-    COLORS     = get_colors(K)
-    NAMA_K     = get_nama_klaster(K)
+    COLORS = get_colors(K)
+    NAMA_K = get_nama_klaster(K)
     for nm in NAMA_K:
         warna = COLORS[nm]
         st.markdown(
@@ -118,17 +327,16 @@ if uploaded_file is None:
 
 df_raw = load_data(uploaded_file, sheet_name)
 df, X_scaled, sil, db = run_clustering(df_raw, K)
-COLORS  = get_colors(K)
-NAMA_K  = get_nama_klaster(K)
-aktif   = [n for n in NAMA_K if n in df['klaster'].values]
+COLORS = get_colors(K)
+NAMA_K = get_nama_klaster(K)
+aktif  = [n for n in NAMA_K if n in df['klaster'].values]
 
 # ── TABS ──────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 Ringkasan Data",
     "🔍 Penentuan K Optimal",
     "🎯 Hasil Clustering",
     "📈 Visualisasi",
-    "🔮 Forecasting",
     "💾 Export"
 ])
 
@@ -195,7 +403,6 @@ with tab2:
             sil_scores.append(silhouette_score(Xs_opt, labels))
             db_scores.append(davies_bouldin_score(Xs_opt, labels))
 
-    # Deteksi elbow
     ia   = np.array(inertia); kv = np.array(list(K_range))
     p1, p2 = np.array([kv[0], ia[0]]), np.array([kv[-1], ia[-1]])
     dists  = [np.abs(np.cross(p2-p1, p1-np.array([kv[i], ia[i]]))) / np.linalg.norm(p2-p1)
@@ -212,9 +419,9 @@ with tab2:
     st.dataframe(metrics_df, use_container_width=True)
 
     c1, c2, c3 = st.columns(3)
-    c1.metric("Elbow terdeteksi",    f"K = {elbow_k}")
+    c1.metric("Elbow terdeteksi",     f"K = {elbow_k}")
     c2.metric("Silhouette tertinggi", f"K = {sil_best_k} ({max(sil_scores):.4f})")
-    c3.metric("K yang digunakan",    f"K = {K}")
+    c3.metric("K yang digunakan",     f"K = {K}")
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
     fig.patch.set_facecolor('#FAFAFA')
@@ -233,8 +440,8 @@ with tab2:
     st.pyplot(fig)
 
     with st.expander("📝 Interpretasi pemilihan K"):
-        idx_K    = list(K_range).index(K)
-        selisih  = max(sil_scores) - sil_scores[idx_K]
+        idx_K   = list(K_range).index(K)
+        selisih = max(sil_scores) - sil_scores[idx_K]
         st.markdown(f"""
 - **Elbow Method** menunjukkan siku paling jelas pada **K = {elbow_k}**.
 - Silhouette Score tertinggi ada di **K = {sil_best_k}** ({max(sil_scores):.4f}), namun K = {K} ({sil_scores[idx_K]:.4f}) tidak berbeda jauh (selisih {selisih:.4f}).
@@ -249,10 +456,9 @@ with tab3:
     st.subheader(f"Hasil K-Means Clustering (K={K})")
 
     c1, c2 = st.columns(2)
-    c1.metric("Silhouette Score",    f"{sil:.4f}", help="Mendekati 1 = sangat baik")
+    c1.metric("Silhouette Score",     f"{sil:.4f}", help="Mendekati 1 = sangat baik")
     c2.metric("Davies-Bouldin Index", f"{db:.4f}",  help="Mendekati 0 = sangat baik")
 
-    # Warna per klaster di tabel (pakai highlight)
     st.subheader("Statistik Per Klaster (rata-rata, juta Rp)")
     summary = df.groupby('klaster')[FEATURES].mean().round(1)
     summary.columns = ['Rata-rata Arus Kas', 'Rata-rata Pendapatan', 'Rata-rata Beban']
@@ -277,8 +483,8 @@ with tab3:
         r_else = df[df['tahun']!=2023]['arus_kas_operasi'].mean() / \
                  df[df['tahun']!=2023]['pendapatan_operasi'].mean() * 100
         c1, c2 = st.columns(2)
-        c1.metric("Rasio Arus Kas/Pendapatan 2023",     f"{r23:.2f}%")
-        c2.metric("Rasio Arus Kas/Pendapatan Non-2023",  f"{r_else:.2f}%")
+        c1.metric("Rasio Arus Kas/Pendapatan 2023",    f"{r23:.2f}%")
+        c2.metric("Rasio Arus Kas/Pendapatan Non-2023", f"{r_else:.2f}%")
         if r23 < 2:
             st.warning("⚠️ Tahun 2023 menunjukkan anomali: pendapatan tertinggi namun arus kas operasi sangat rendah.")
 
@@ -352,7 +558,7 @@ with tab4:
 
     # ── Grafik 4: Heatmap
     st.markdown("#### Heatmap Klaster Per Bulan Per Tahun")
-    klaster_num_map  = {kl: i for i, kl in enumerate(aktif)}
+    klaster_num_map   = {kl: i for i, kl in enumerate(aktif)}
     df['klaster_num'] = df['klaster'].map(klaster_num_map)
     pivot = df.pivot_table(index='tahun', columns='bulan', values='klaster_num', aggfunc='first')
     pivot = pivot[[b for b in BULAN_ORDER if b in pivot.columns]]
@@ -367,7 +573,6 @@ with tab4:
     ax4.set_yticklabels(pivot.index.tolist(), fontsize=10)
     patches = [mpatches.Patch(color=COLORS[kl], label=kl) for kl in aktif]
     ax4.legend(handles=patches, loc='upper right', bbox_to_anchor=(1.25, 1), fontsize=9)
-    # Inisial otomatis: huruf pertama tiap kata
     inisial_map = {kl: ''.join(w[0] for w in kl.split()) for kl in aktif}
     for i in range(len(pivot.index)):
         for j in range(len(pivot.columns)):
@@ -380,201 +585,9 @@ with tab4:
 
 
 # ═══════════════════════════════════════════════════════════════
-# TAB 5 — FORECASTING (Linear Regression, periode dinamis)
+# TAB 5 — EXPORT
 # ═══════════════════════════════════════════════════════════════
 with tab5:
-    st.subheader("🔮 Forecasting Kinerja Keuangan")
-    st.caption("Metode: Linear Regression | Fitur: indeks waktu bulanan")
-
-    VAR_LABELS = {
-        'arus_kas_operasi':   'Arus Kas Operasi',
-        'pendapatan_operasi': 'Pendapatan Operasi',
-        'beban_operasi':      'Beban Operasi',
-    }
-    VAR_COLORS = {
-        'arus_kas_operasi':   '#2980b9',
-        'pendapatan_operasi': '#1a9e3f',
-        'beban_operasi':      '#e74c3c',
-    }
-
-    # ── Kontrol periode forecast ──────────────────────────────
-    col_ctrl1, col_ctrl2 = st.columns([2, 1])
-    with col_ctrl1:
-        FORECAST_N = st.number_input(
-            "Jumlah bulan yang ingin di-forecast",
-            min_value=1, max_value=60, value=12, step=1,
-            help="Maksimal 60 bulan (5 tahun ke depan)"
-        )
-    with col_ctrl2:
-        tahun_ke   = FORECAST_N / 12
-        st.metric("Periode forecast", f"{FORECAST_N} bulan",
-                  delta=f"≈ {tahun_ke:.1f} tahun" if FORECAST_N >= 12 else None)
-
-    # ── Siapkan data time-series ──────────────────────────────
-    df_ts = df.sort_values(['tahun','bulan_num']).reset_index(drop=True)
-    df_ts['t'] = np.arange(len(df_ts))
-
-    hist_labels = [f"{row['bulan']} {row['tahun']}" for _, row in df_ts.iterrows()]
-
-    last_tahun = int(df_ts['tahun'].iloc[-1])
-    last_bulan = int(df_ts['bulan_num'].iloc[-1])
-    future_labels = []
-    for i in range(1, FORECAST_N + 1):
-        bnum  = (last_bulan - 1 + i) % 12
-        tahun = last_tahun + (last_bulan - 1 + i) // 12
-        future_labels.append(f"{BULAN_ORDER[bnum]} {tahun}")
-
-    # Info periode
-    st.info(f"📅 Forecast dari **{future_labels[0]}** sampai **{future_labels[-1]}**")
-
-    # ── Latih model & forecast per variabel ──────────────────
-    results = {}
-    for var in FEATURES:
-        X_train     = df_ts[['t']].values
-        y_train     = df_ts[var].values
-        model       = LinearRegression()
-        model.fit(X_train, y_train)
-        y_pred_hist = model.predict(X_train)
-        t_future    = np.arange(len(df_ts), len(df_ts) + FORECAST_N).reshape(-1, 1)
-        y_forecast  = model.predict(t_future)
-        results[var] = {
-            'y_hist':      y_train,
-            'y_pred_hist': y_pred_hist,
-            'y_forecast':  y_forecast,
-            'mae':  mean_absolute_error(y_train, y_pred_hist),
-            'rmse': np.sqrt(mean_squared_error(y_train, y_pred_hist)),
-            'r2':   r2_score(y_train, y_pred_hist),
-        }
-
-    # ── Metrik akurasi ───────────────────────────────────────
-    st.divider()
-    st.markdown("#### Evaluasi Model (data historis)")
-    met_cols = st.columns(3)
-    for i, var in enumerate(FEATURES):
-        r = results[var]
-        with met_cols[i]:
-            st.markdown(f"**{VAR_LABELS[var]}**")
-            # Warna R² — hijau jika >= 0.5, kuning jika >= 0.3, merah jika < 0.3
-            st.metric("R²",   f"{r['r2']:.4f}",
-                      help="Mendekati 1 = fit sangat baik")
-            st.metric("MAE",  f"{r['mae']:,.0f}", help="Rata-rata error absolut (juta Rp)")
-            st.metric("RMSE", f"{r['rmse']:,.0f}",help="Root mean squared error (juta Rp)")
-
-    with st.expander("ℹ️ Cara membaca metrik"):
-        st.markdown("""
-- **R²** — seberapa baik garis tren cocok dengan data historis. Nilai ≥ 0.7 sangat baik, 0.5–0.7 cukup, < 0.3 data terlalu fluktuatif untuk tren linear.
-- **MAE** — rata-rata selisih antara nilai aktual dan prediksi (juta Rp). Makin kecil makin akurat.
-- **RMSE** — mirip MAE tapi lebih sensitif terhadap error yang besar.
-- R² arus kas yang rendah bukan berarti model salah, bisa jadi memang arus kas sangat fluktuatif.
-        """)
-
-    st.divider()
-
-    # ── Grafik per variabel ───────────────────────────────────
-    st.markdown("#### Grafik Forecast per Variabel")
-
-    # Tentukan jarak tick X tergantung total panjang data
-    n_hist   = len(df_ts)
-    n_total  = n_hist + FORECAST_N
-    tick_step = 6 if n_total <= 120 else 12
-
-    for var in FEATURES:
-        r     = results[var]
-        color = VAR_COLORS[var]
-        label = VAR_LABELS[var]
-
-        x_hist = list(range(n_hist))
-        x_fore = list(range(n_hist, n_hist + FORECAST_N))
-
-        fig, ax = plt.subplots(figsize=(14, 3.8))
-        fig.patch.set_facecolor('#FAFAFA')
-
-        # Aktual
-        ax.plot(x_hist, r['y_hist'], color=color, linewidth=1.4,
-                alpha=0.55, label='Aktual', zorder=2)
-        ax.scatter(x_hist, r['y_hist'], color=color, s=20, zorder=3,
-                   edgecolors='white', linewidth=0.4)
-
-        # Tren fit
-        ax.plot(x_hist, r['y_pred_hist'], color='#555', linewidth=1.1,
-                linestyle='--', alpha=0.65, label='Tren (fit)', zorder=2)
-
-        # Forecast line
-        ax.plot([x_hist[-1]] + x_fore,
-                [r['y_hist'][-1]] + list(r['y_forecast']),
-                color=color, linewidth=2, linestyle='-',
-                label=f'Forecast ({FORECAST_N} bln)', zorder=3)
-
-        # Titik forecast — tampilkan jika <= 24 bulan, skip jika lebih
-        if FORECAST_N <= 24:
-            ax.scatter(x_fore, r['y_forecast'], color=color, s=45, zorder=4,
-                       edgecolors='white', linewidth=0.7, marker='D')
-
-        # Area forecast
-        ax.axvspan(n_hist - 0.5, n_hist + FORECAST_N - 0.5,
-                   alpha=0.07, color=color)
-        ax.axvline(x=n_hist - 0.5, color='#888', linewidth=1,
-                   linestyle=':', alpha=0.8)
-
-        # Label "Forecast →"
-        ymax = max(r['y_hist'].max(), r['y_forecast'].max())
-        ymin = min(r['y_hist'].min(), r['y_forecast'].min())
-        ax.text(n_hist + 0.3, ymax - (ymax - ymin) * 0.05,
-                'Forecast →', fontsize=8, color='#888', va='top')
-
-        # Anotasi nilai akhir forecast
-        ax.annotate(f"Rp {r['y_forecast'][-1]:,.0f}",
-                    xy=(x_fore[-1], r['y_forecast'][-1]),
-                    xytext=(x_fore[-1] - max(3, FORECAST_N // 5),
-                            r['y_forecast'][-1] + r['y_hist'].std() * 0.45),
-                    fontsize=8, color=color, fontweight='bold',
-                    arrowprops=dict(arrowstyle='->', color=color, lw=1.1))
-
-        # X ticks — adaptif
-        all_labels = hist_labels + future_labels
-        tick_hist  = list(range(0, n_hist, tick_step))
-        # Untuk forecast: tampilkan setiap tick_step bulan
-        tick_fore  = list(range(n_hist, n_hist + FORECAST_N, max(1, FORECAST_N // 6)))
-        if x_fore[-1] not in tick_fore:
-            tick_fore.append(x_fore[-1])
-        tick_pos  = tick_hist + tick_fore
-        tick_labs = [all_labels[i] for i in tick_pos]
-        ax.set_xticks(tick_pos)
-        ax.set_xticklabels(tick_labs, rotation=45, ha='right', fontsize=7.5)
-
-        ax.set_title(f'{label} — Aktual & Forecast {FORECAST_N} Bulan ke Depan',
-                     fontsize=11, fontweight='bold')
-        ax.set_ylabel('Juta Rp', fontsize=9)
-        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:,.0f}'))
-        ax.legend(fontsize=8, loc='upper left')
-        ax.grid(axis='y', alpha=0.25)
-        ax.set_facecolor('white')
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
-
-    # ── Tabel hasil forecast ─────────────────────────────────
-    st.divider()
-    st.markdown(f"#### Tabel Hasil Forecast {FORECAST_N} Bulan ({future_labels[0]} – {future_labels[-1]})")
-    forecast_df = pd.DataFrame({
-        'Periode':               future_labels,
-        'Arus Kas (juta Rp)':   [round(v) for v in results['arus_kas_operasi']['y_forecast']],
-        'Pendapatan (juta Rp)': [round(v) for v in results['pendapatan_operasi']['y_forecast']],
-        'Beban (juta Rp)':      [round(v) for v in results['beban_operasi']['y_forecast']],
-    })
-    forecast_df['Est. Laba Operasi (juta Rp)'] = (
-        forecast_df['Pendapatan (juta Rp)'] - forecast_df['Beban (juta Rp)']
-    )
-    st.dataframe(forecast_df.set_index('Periode'), use_container_width=True)
-    st.info("💡 **Est. Laba Operasi** = Pendapatan − Beban hasil forecast.")
-
-    # Simpan ke session state untuk export
-    st.session_state['forecast_df']    = forecast_df
-    st.session_state['forecast_label'] = f'Forecast {FORECAST_N} Bulan'
-
-
-# ─────────────────────────────────────────────────────────────
-with tab6:
     st.subheader("Export Hasil")
 
     out_cols = ['tahun','bulan','arus_kas_operasi','pendapatan_operasi','beban_operasi','klaster']
@@ -584,17 +597,11 @@ with tab6:
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine='openpyxl') as writer:
         out_df.to_excel(writer, index=False, sheet_name='Hasil Clustering')
-        if 'forecast_df' in st.session_state:
-            sheet_label = st.session_state.get('forecast_label', 'Forecast')[:31]
-            st.session_state['forecast_df'].to_excel(
-                writer, index=False, sheet_name=sheet_label
-            )
     buf.seek(0)
 
     st.download_button(
-        label="⬇️ Download hasil_clustering_forecast.xlsx",
+        label="⬇️ Download hasil_clustering.xlsx",
         data=buf,
-        file_name="hasil_clustering_forecast.xlsx",
+        file_name="hasil_clustering.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    st.info("File Excel berisi 2 sheet: **Hasil Clustering** dan **Forecast 12 Bulan** (buka tab Forecasting dulu agar sheet forecast tersedia).")
