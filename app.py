@@ -318,17 +318,26 @@ with st.sidebar:
         )
     st.divider()
 
-if uploaded_file is None:
-    st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
-    st.stop()
+# ── HEADER BANNER ────────────────────────────────────────────
+st.markdown("""
+<div style="background:linear-gradient(135deg,#0a3d62 0%,#1a6fa8 60%,#2980b9 100%);
+            padding:28px 36px; border-radius:12px; margin-bottom:24px;
+            display:flex; align-items:center; gap:24px">
+    <div>
+        <div style="font-size:13px; color:#aed6f1; font-weight:600; letter-spacing:2px; margin-bottom:4px">
+            PT PELINDO MARINE SERVICE
+        </div>
+        <div style="font-size:22px; font-weight:800; color:white; line-height:1.3">
+            Sistem Monitoring Arus Kas Operasional
+        </div>
+        <div style="font-size:13px; color:#aed6f1; margin-top:6px">
+            Berbasis K-Means Clustering &amp; Dashboard Interaktif
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-df_raw = load_data(uploaded_file, sheet_name)
-df, X_scaled, sil, db = run_clustering(df_raw, K)
-COLORS = get_colors(K)
-NAMA_K = get_nama_klaster(K)
-aktif  = [n for n in NAMA_K if n in df['klaster'].values]
-
-# ── TABS + LOGOUT sejajar ─────────────────────────────────────
+# ── TABS ─────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5, tab_logout = st.tabs([
     "📊 Ringkasan Data",
     "🔍 Penentuan K Optimal",
@@ -337,6 +346,36 @@ tab1, tab2, tab3, tab4, tab5, tab_logout = st.tabs([
     "💾 Export",
     "🚪 Logout"
 ])
+
+data_loaded = uploaded_file is not None
+if not data_loaded:
+    with tab1:
+        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+    with tab2:
+        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+    with tab3:
+        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+    with tab4:
+        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+    with tab5:
+        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+    with tab_logout:
+        col_l, col_m, col_r = st.columns([1, 1.2, 1])
+        with col_m:
+            st.markdown("<div style='text-align:center;font-size:48px;margin:24px 0'>🚪</div>", unsafe_allow_html=True)
+            st.markdown("<div style='text-align:center;font-size:18px;font-weight:600;color:#2c3e50;margin-bottom:8px'>Yakin ingin keluar?</div>", unsafe_allow_html=True)
+            if st.button("🚪 Ya, Logout", use_container_width=True, type="primary"):
+                st.session_state['logged_in'] = False
+                st.session_state['current_user'] = ""
+                st.session_state['page'] = "login"
+                st.rerun()
+    st.stop()
+
+df_raw = load_data(uploaded_file, sheet_name)
+df, X_scaled, sil, db = run_clustering(df_raw, K)
+COLORS = get_colors(K)
+NAMA_K = get_nama_klaster(K)
+aktif  = [n for n in NAMA_K if n in df['klaster'].values]
 
 # ═══════════════════════════════════════════════════════════════
 # TAB 1 — RINGKASAN DATA
@@ -604,6 +643,7 @@ with tab5:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
+
 # ═══════════════════════════════════════════════════════════════
 # TAB LOGOUT
 # ═══════════════════════════════════════════════════════════════
@@ -620,10 +660,8 @@ with tab_logout:
             Sesi Anda akan diakhiri dan Anda akan kembali ke halaman login.
         </div>
         """, unsafe_allow_html=True)
-        if st.button("🚪 Ya, Logout", use_container_width=True, type="primary"):
+        if st.button("🚪 Ya, Logout", key="logout_main", use_container_width=True, type="primary"):
             st.session_state['logged_in']    = False
             st.session_state['current_user'] = ''
             st.session_state['page']         = 'login'
             st.rerun()
-        if st.button("↩️ Batal", use_container_width=True):
-            pass
