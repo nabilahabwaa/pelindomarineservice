@@ -7,7 +7,8 @@ from matplotlib.colors import ListedColormap, to_hex
 import matplotlib.colors as mcolors
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, davies_bouldin_score
+from sklearn.metrics import silhouette_score, davies_bouldin_score, mean_absolute_error, mean_squared_error, r2_score
+from sklearn.linear_model import LinearRegression
 from scipy import stats
 import io
 import warnings
@@ -124,11 +125,12 @@ NAMA_K  = get_nama_klaster(K)
 aktif   = [n for n in NAMA_K if n in df['klaster'].values]
 
 # ── TABS ──────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Ringkasan Data",
     "🔍 Penentuan K Optimal",
     "🎯 Hasil Clustering",
     "📈 Visualisasi",
+    "🔮 Forecasting",
     "💾 Export"
 ])
 
@@ -162,7 +164,7 @@ with tab1:
             stat, p = stats.shapiro(df[f])
             rows.append({'Variabel': f, 'Statistik': round(stat,4),
                          'p-value': round(p,4),
-                         'Distribusi': 'Normal' if p > 0.05 else 'Tidak Normal'})
+                         'Distribusi': 'Normal' if p > 0.05 else 'Tidak Berdistribusi Normal'})
         st.dataframe(pd.DataFrame(rows).set_index('Variabel'), use_container_width=True)
         st.caption("→ Data tidak normal → normalisasi Z-Score tepat digunakan sebelum clustering.")
 
@@ -380,9 +382,201 @@ with tab4:
 
 
 # ═══════════════════════════════════════════════════════════════
-# TAB 5 — EXPORT
+# TAB 5 — FORECASTING (Linear Regression, periode dinamis)
 # ═══════════════════════════════════════════════════════════════
 with tab5:
+    st.subheader("🔮 Forecasting Kinerja Keuangan")
+    st.caption("Metode: Linear Regression | Fitur: indeks waktu bulanan")
+
+    VAR_LABELS = {
+        'arus_kas_operasi':   'Arus Kas Operasi',
+        'pendapatan_operasi': 'Pendapatan Operasi',
+        'beban_operasi':      'Beban Operasi',
+    }
+    VAR_COLORS = {
+        'arus_kas_operasi':   '#2980b9',
+        'pendapatan_operasi': '#1a9e3f',
+        'beban_operasi':      '#e74c3c',
+    }
+
+    # ── Kontrol periode forecast ──────────────────────────────
+    col_ctrl1, col_ctrl2 = st.columns([2, 1])
+    with col_ctrl1:
+        FORECAST_N = st.slider(
+            "Jumlah bulan yang ingin di-forecast",
+            min_value=1, max_value=60, value=12, step=1,
+            help="Maksimal 60 bulan (5 tahun ke depan)"
+        )
+    with col_ctrl2:
+        tahun_ke   = FORECAST_N / 12
+        st.metric("Periode forecast", f"{FORECAST_N} bulan",
+                  delta=f"≈ {tahun_ke:.1f} tahun" if FORECAST_N >= 12 else None)
+
+    # ── Siapkan data time-series ──────────────────────────────
+    df_ts = df.sort_values(['tahun','bulan_num']).reset_index(drop=True)
+    df_ts['t'] = np.arange(len(df_ts))
+
+    hist_labels = [f"{row['bulan']} {row['tahun']}" for _, row in df_ts.iterrows()]
+
+    last_tahun = int(df_ts['tahun'].iloc[-1])
+    last_bulan = int(df_ts['bulan_num'].iloc[-1])
+    future_labels = []
+    for i in range(1, FORECAST_N + 1):
+        bnum  = (last_bulan - 1 + i) % 12
+        tahun = last_tahun + (last_bulan - 1 + i) // 12
+        future_labels.append(f"{BULAN_ORDER[bnum]} {tahun}")
+
+    # Info periode
+    st.info(f"📅 Forecast dari **{future_labels[0]}** sampai **{future_labels[-1]}**")
+
+    # ── Latih model & forecast per variabel ──────────────────
+    results = {}
+    for var in FEATURES:
+        X_train     = df_ts[['t']].values
+        y_train     = df_ts[var].values
+        model       = LinearRegression()
+        model.fit(X_train, y_train)
+        y_pred_hist = model.predict(X_train)
+        t_future    = np.arange(len(df_ts), len(df_ts) + FORECAST_N).reshape(-1, 1)
+        y_forecast  = model.predict(t_future)
+        results[var] = {
+            'y_hist':      y_train,
+            'y_pred_hist': y_pred_hist,
+            'y_forecast':  y_forecast,
+            'mae':  mean_absolute_error(y_train, y_pred_hist),
+            'rmse': np.sqrt(mean_squared_error(y_train, y_pred_hist)),
+            'r2':   r2_score(y_train, y_pred_hist),
+        }
+
+    # ── Metrik akurasi ───────────────────────────────────────
+    st.divider()
+    st.markdown("#### Evaluasi Model (data historis)")
+    met_cols = st.columns(3)
+    for i, var in enumerate(FEATURES):
+        r = results[var]
+        with met_cols[i]:
+            st.markdown(f"**{VAR_LABELS[var]}**")
+            # Warna R² — hijau jika >= 0.5, kuning jika >= 0.3, merah jika < 0.3
+            st.metric("R²",   f"{r['r2']:.4f}",  delta=r2_delta, delta_color="off",
+                      help="Mendekati 1 = fit sangat baik")
+            st.metric("MAE",  f"{r['mae']:,.0f}", help="Rata-rata error absolut (juta Rp)")
+            st.metric("RMSE", f"{r['rmse']:,.0f}",help="Root mean squared error (juta Rp)")
+
+    with st.expander("ℹ️ Cara membaca metrik ini"):
+        st.markdown("""
+- **R²** — seberapa baik garis tren cocok dengan data historis. Nilai ≥ 0.7 sangat baik, 0.5–0.7 cukup, < 0.3 artinya data terlalu fluktuatif untuk tren linear.
+- **MAE** — rata-rata selisih antara nilai aktual dan prediksi (juta Rp). Makin kecil makin akurat.
+- **RMSE** — mirip MAE tapi lebih sensitif terhadap error yang besar.
+- R² arus kas yang rendah bukan berarti model salah — bisa jadi memang arus kas sangat fluktuatif. Hal ini bisa dijadikan temuan di laporan PKL.
+        """)
+
+    st.divider()
+
+    # ── Grafik per variabel ───────────────────────────────────
+    st.markdown("#### Grafik Forecast per Variabel")
+
+    # Tentukan jarak tick X tergantung total panjang data
+    n_hist   = len(df_ts)
+    n_total  = n_hist + FORECAST_N
+    tick_step = 6 if n_total <= 120 else 12
+
+    for var in FEATURES:
+        r     = results[var]
+        color = VAR_COLORS[var]
+        label = VAR_LABELS[var]
+
+        x_hist = list(range(n_hist))
+        x_fore = list(range(n_hist, n_hist + FORECAST_N))
+
+        fig, ax = plt.subplots(figsize=(14, 3.8))
+        fig.patch.set_facecolor('#FAFAFA')
+
+        # Aktual
+        ax.plot(x_hist, r['y_hist'], color=color, linewidth=1.4,
+                alpha=0.55, label='Aktual', zorder=2)
+        ax.scatter(x_hist, r['y_hist'], color=color, s=20, zorder=3,
+                   edgecolors='white', linewidth=0.4)
+
+        # Tren fit
+        ax.plot(x_hist, r['y_pred_hist'], color='#555', linewidth=1.1,
+                linestyle='--', alpha=0.65, label='Tren (fit)', zorder=2)
+
+        # Forecast line
+        ax.plot([x_hist[-1]] + x_fore,
+                [r['y_hist'][-1]] + list(r['y_forecast']),
+                color=color, linewidth=2, linestyle='-',
+                label=f'Forecast ({FORECAST_N} bln)', zorder=3)
+
+        # Titik forecast — tampilkan jika <= 24 bulan, skip jika lebih
+        if FORECAST_N <= 24:
+            ax.scatter(x_fore, r['y_forecast'], color=color, s=45, zorder=4,
+                       edgecolors='white', linewidth=0.7, marker='D')
+
+        # Area forecast
+        ax.axvspan(n_hist - 0.5, n_hist + FORECAST_N - 0.5,
+                   alpha=0.07, color=color)
+        ax.axvline(x=n_hist - 0.5, color='#888', linewidth=1,
+                   linestyle=':', alpha=0.8)
+
+        # Label "Forecast →"
+        ymax = max(r['y_hist'].max(), r['y_forecast'].max())
+        ymin = min(r['y_hist'].min(), r['y_forecast'].min())
+        ax.text(n_hist + 0.3, ymax - (ymax - ymin) * 0.05,
+                'Forecast →', fontsize=8, color='#888', va='top')
+
+        # Anotasi nilai akhir forecast
+        ax.annotate(f"Rp {r['y_forecast'][-1]:,.0f}",
+                    xy=(x_fore[-1], r['y_forecast'][-1]),
+                    xytext=(x_fore[-1] - max(3, FORECAST_N // 5),
+                            r['y_forecast'][-1] + r['y_hist'].std() * 0.45),
+                    fontsize=8, color=color, fontweight='bold',
+                    arrowprops=dict(arrowstyle='->', color=color, lw=1.1))
+
+        # X ticks — adaptif
+        all_labels = hist_labels + future_labels
+        tick_hist  = list(range(0, n_hist, tick_step))
+        # Untuk forecast: tampilkan setiap tick_step bulan
+        tick_fore  = list(range(n_hist, n_hist + FORECAST_N, max(1, FORECAST_N // 6)))
+        if x_fore[-1] not in tick_fore:
+            tick_fore.append(x_fore[-1])
+        tick_pos  = tick_hist + tick_fore
+        tick_labs = [all_labels[i] for i in tick_pos]
+        ax.set_xticks(tick_pos)
+        ax.set_xticklabels(tick_labs, rotation=45, ha='right', fontsize=7.5)
+
+        ax.set_title(f'{label} — Aktual & Forecast {FORECAST_N} Bulan ke Depan',
+                     fontsize=11, fontweight='bold')
+        ax.set_ylabel('Juta Rp', fontsize=9)
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:,.0f}'))
+        ax.legend(fontsize=8, loc='upper left')
+        ax.grid(axis='y', alpha=0.25)
+        ax.set_facecolor('white')
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close(fig)
+
+    # ── Tabel hasil forecast ─────────────────────────────────
+    st.divider()
+    st.markdown(f"#### Tabel Hasil Forecast {FORECAST_N} Bulan ({future_labels[0]} – {future_labels[-1]})")
+    forecast_df = pd.DataFrame({
+        'Periode':               future_labels,
+        'Arus Kas (juta Rp)':   [round(v) for v in results['arus_kas_operasi']['y_forecast']],
+        'Pendapatan (juta Rp)': [round(v) for v in results['pendapatan_operasi']['y_forecast']],
+        'Beban (juta Rp)':      [round(v) for v in results['beban_operasi']['y_forecast']],
+    })
+    forecast_df['Est. Laba Operasi (juta Rp)'] = (
+        forecast_df['Pendapatan (juta Rp)'] - forecast_df['Beban (juta Rp)']
+    )
+    st.dataframe(forecast_df.set_index('Periode'), use_container_width=True)
+    st.info("💡 **Est. Laba Operasi** = Pendapatan − Beban hasil forecast.")
+
+    # Simpan ke session state untuk export
+    st.session_state['forecast_df']    = forecast_df
+    st.session_state['forecast_label'] = f'Forecast {FORECAST_N} Bulan'
+
+
+# ─────────────────────────────────────────────────────────────
+with tab6:
     st.subheader("Export Hasil")
 
     out_cols = ['tahun','bulan','arus_kas_operasi','pendapatan_operasi','beban_operasi','klaster']
@@ -392,12 +586,17 @@ with tab5:
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine='openpyxl') as writer:
         out_df.to_excel(writer, index=False, sheet_name='Hasil Clustering')
+        if 'forecast_df' in st.session_state:
+            sheet_label = st.session_state.get('forecast_label', 'Forecast')[:31]
+            st.session_state['forecast_df'].to_excel(
+                writer, index=False, sheet_name=sheet_label
+            )
     buf.seek(0)
 
     st.download_button(
-        label="⬇️ Download hasil_clustering.xlsx",
+        label="⬇️ Download hasil_clustering_forecast.xlsx",
         data=buf,
-        file_name="hasil_clustering.xlsx",
+        file_name="hasil_clustering_forecast.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    st.info("Untuk menyimpan grafik, klik kanan pada grafik di tab Visualisasi → Save image as.")
+    st.info("File Excel berisi 2 sheet: **Hasil Clustering** dan **Forecast 12 Bulan** (buka tab Forecasting dulu agar sheet forecast tersedia).")
