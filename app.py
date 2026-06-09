@@ -110,11 +110,11 @@ def halaman_login():
 
         col_a, col_b = st.columns(2)
         with col_a:
-            if st.button("🔑 Lupa Password?", use_container_width=True):
+            if st.button("Lupa Password?", use_container_width=True):
                 st.session_state['page'] = 'forgot'
                 st.rerun()
         with col_b:
-            if st.button("📝 Buat Akun Baru", use_container_width=True):
+            if st.button("Buat Akun Baru", use_container_width=True):
                 st.session_state['page'] = 'register'
                 st.rerun()
 
@@ -148,7 +148,7 @@ def halaman_lupa_password():
                 st.error("Email tidak ditemukan. Pastikan email sudah terdaftar.")
             else:
                 password_ditemukan = accounts[email_cek]
-                st.success(f"✅ Password untuk **{email_cek}** adalah:")
+                st.success(f"Password untuk **{email_cek}** adalah:")
                 st.markdown(f"""
                 <div style='background:#eaf4fb; border:1.5px solid #2980b9; border-radius:8px;
                             padding:14px 18px; font-size:20px; font-weight:700;
@@ -206,7 +206,7 @@ def halaman_register():
                 st.error("Email sudah terdaftar. Silakan login atau gunakan email lain.")
             else:
                 st.session_state['accounts'][email_baru] = pass_baru
-                st.success(f"✅ Akun **{email_baru}** berhasil dibuat! Silakan login.")
+                st.success(f"Akun **{email_baru}** berhasil dibuat! Silakan login.")
                 st.balloons()
 
         st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
@@ -303,7 +303,7 @@ with st.sidebar:
     st.header("⚙️ Konfigurasi")
     uploaded_file = st.file_uploader("Upload file Excel (.xlsx)", type=["xlsx"])
     sheet_name    = st.text_input("Nama sheet", value="bulanan")
-    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=3)
+    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=4)
 
     st.divider()
     st.markdown("**Preview Klaster**")
@@ -321,12 +321,12 @@ with st.sidebar:
 
 # ── TABS (mentok di atas, sebelum banner) ────────────────────
 tab1, tab2, tab3, tab4, tab5, tab_logout = st.tabs([
-    "📊 Ringkasan Data",
-    "🔍 Penentuan K Optimal",
-    "🎯 Hasil Clustering",
-    "📈 Visualisasi",
-    "💾 Export",
-    "🚪 Logout"
+    "Ringkasan Data",
+    "Penentuan K Optimal",
+    "Hasil Clustering",
+    "Visualisasi",
+    "Export",
+    "Logout"
 ])
 
 # ── BANNER (di dalam area tab, tepat di bawah navigasi) ──────
@@ -352,21 +352,21 @@ data_loaded = uploaded_file is not None
 if not data_loaded:
     with tab1:
         st.markdown(BANNER_HTML, unsafe_allow_html=True)
-        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar untuk memulai analisis.")
     with tab2:
-        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar untuk memulai analisis.")
     with tab3:
-        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar untuk memulai analisis.")
     with tab4:
-        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar untuk memulai analisis.")
     with tab5:
-        st.info("👈 Upload file Excel di sidebar untuk memulai analisis.")
+        st.info("Upload file Excel di sidebar untuk memulai analisis.")
     with tab_logout:
         col_l, col_m, col_r = st.columns([1, 1.2, 1])
         with col_m:
             st.markdown("<div style='text-align:center;font-size:48px;margin:24px 0'>🚪</div>", unsafe_allow_html=True)
             st.markdown("<div style='text-align:center;font-size:18px;font-weight:600;color:#2c3e50;margin-bottom:8px'>Yakin ingin keluar?</div>", unsafe_allow_html=True)
-            if st.button("🚪 Ya, Logout", use_container_width=True, type="primary"):
+            if st.button("Ya, Logout", use_container_width=True, type="primary"):
                 st.session_state['logged_in'] = False
                 st.session_state['current_user'] = ""
                 st.session_state['page'] = "login"
