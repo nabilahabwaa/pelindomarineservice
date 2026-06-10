@@ -69,13 +69,9 @@ st.markdown("""
         text-decoration: underline;
     }
 
-    /* ── TAB MENTOK KE ATAS ── */
-    div[data-testid="stAppViewContainer"] > section[data-testid="stMain"] > div[data-testid="stMainBlockContainer"] {
-        padding-top: 0 !important;
-    }
-    div[data-testid="stTabs"] {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
+    /* ── TAB NAIK, BANNER TETAP FULL, TOOLBAR TETAP ── */
+    .block-container {
+        padding-top: 0.5rem !important;
     }
     div[data-testid="stTabs"] > div:first-child {
         position: sticky;
@@ -83,13 +79,7 @@ st.markdown("""
         z-index: 999;
         background: white;
         padding-top: 4px;
-        padding-bottom: 0;
         border-bottom: 1px solid #e0e0e0;
-        margin-bottom: 0;
-    }
-    /* Kurangi padding atas halaman utama */
-    .block-container {
-        padding-top: 0.5rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -340,27 +330,26 @@ with st.sidebar:
         )
     st.divider()
 
-# ── BANNER (compact, satu kali, di atas tabs) ────────────────
-st.markdown("""
+# ── BANNER HTML (dipakai di dalam tiap tab) ─────────────────
+BANNER_HTML = """
 <div style="background:linear-gradient(135deg,#0a3d62 0%,#1a6fa8 60%,#2980b9 100%);
-            padding:12px 24px; border-radius:10px; margin-bottom:8px;
-            display:flex; align-items:center; gap:16px">
-    <span style="font-size:24px; line-height:1">🚢</span>
+            padding:28px 36px; border-radius:12px; margin-bottom:24px;
+            display:flex; align-items:center; gap:24px">
     <div>
-        <span style="font-size:11px; color:#aed6f1; font-weight:700; letter-spacing:2px; margin-right:12px">
+        <div style="font-size:12px; color:#aed6f1; font-weight:700; letter-spacing:2px; margin-bottom:4px">
             PT PELINDO MARINE SERVICE
-        </span>
-        <span style="font-size:15px; font-weight:800; color:white;">
+        </div>
+        <div style="font-size:22px; font-weight:800; color:white; line-height:1.3">
             Sistem Monitoring Arus Kas Operasional
-        </span>
-        <span style="font-size:12px; color:#aed6f1; margin-left:10px">
-            — Berbasis K-Means Clustering &amp; Dashboard Interaktif
-        </span>
+        </div>
+        <div style="font-size:13px; color:#aed6f1; margin-top:6px">
+            Berbasis K-Means Clustering &amp; Dashboard Interaktif
+        </div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+"""
 
-# ── TABS ──────────────────────────────────────────────────────
+# ── TABS (langsung di bawah toolbar, tanpa apapun di atasnya) ─
 tab1, tab2, tab3, tab4, tab5, tab_manual, tab_logout = st.tabs([
     "Ringkasan Data",
     "Penentuan K Optimal",
@@ -375,6 +364,7 @@ tab1, tab2, tab3, tab4, tab5, tab_manual, tab_logout = st.tabs([
 # TAB INPUT MANUAL (tidak butuh file upload)
 # ═══════════════════════════════════════════════════════════════
 with tab_manual:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("📥 Input Data Manual")
     st.markdown("Isi tabel di bawah sesuai data keuangan. Data ini bisa langsung digunakan untuk analisis clustering.")
 
@@ -519,6 +509,7 @@ aktif  = [n for n in NAMA_K if n in df['klaster'].values]
 # TAB 1 — RINGKASAN DATA
 # ═══════════════════════════════════════════════════════════════
 with tab1:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     if use_manual_data:
         st.info("📋 Menggunakan **data manual** yang diinput di tab Input Manual.")
     st.subheader("Ringkasan Data")
@@ -566,6 +557,7 @@ with tab1:
 # TAB 2 — PENENTUAN K OPTIMAL
 # ═══════════════════════════════════════════════════════════════
 with tab2:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Penentuan K Optimal")
 
     scaler_opt = StandardScaler()
@@ -630,6 +622,7 @@ with tab2:
 # TAB 3 — HASIL CLUSTERING
 # ═══════════════════════════════════════════════════════════════
 with tab3:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader(f"Hasil K-Means Clustering (K={K})")
 
     c1, c2 = st.columns(2)
@@ -674,6 +667,7 @@ with tab3:
 # TAB 4 — VISUALISASI
 # ═══════════════════════════════════════════════════════════════
 with tab4:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Visualisasi Hasil Clustering")
 
     df_s = df.sort_values(['tahun','bulan_num']).reset_index(drop=True)
@@ -760,6 +754,7 @@ with tab4:
 # TAB 5 — EXPORT
 # ═══════════════════════════════════════════════════════════════
 with tab5:
+    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Export Hasil")
 
     out_cols = ['tahun','bulan','arus_kas_operasi','pendapatan_operasi','beban_operasi','klaster']
