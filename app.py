@@ -71,7 +71,7 @@ st.markdown("""
 
     /* ── TAB NAIK, BANNER TETAP FULL, TOOLBAR TETAP ── */
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 4rem !important;
     }
     div[data-testid="stTabs"] > div:first-child {
         position: sticky;
