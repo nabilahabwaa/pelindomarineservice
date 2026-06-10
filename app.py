@@ -7,7 +7,7 @@ from matplotlib.colors import ListedColormap, to_hex
 import matplotlib.colors as mcolors
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, davies_bouldin_score
+from sklearn.metrics import silhouette_score
 from scipy import stats
 import io
 import warnings
@@ -37,7 +37,7 @@ if 'manual_df' not in st.session_state:
 if 'use_manual' not in st.session_state:
     st.session_state['use_manual'] = False
 
-# ── CSS LOGIN ─────────────────────────────────────────────────
+# ── CSS ───────────────────────────────────────────────────────
 st.markdown("""
 <style>
     .login-container {
@@ -68,8 +68,6 @@ st.markdown("""
         padding: 0;
         text-decoration: underline;
     }
-
-    /* ── TAB NAIK, BANNER TETAP FULL, TOOLBAR TETAP ── */
     .block-container {
         padding-top: 4rem !important;
     }
@@ -120,7 +118,7 @@ def halaman_login():
             elif accounts[email] != password:
                 st.error("Password salah.")
             else:
-                st.session_state['logged_in']   = True
+                st.session_state['logged_in']    = True
                 st.session_state['current_user'] = email
                 st.session_state['page']         = 'dashboard'
                 st.rerun()
@@ -164,14 +162,13 @@ def halaman_lupa_password():
             elif email_cek not in accounts:
                 st.error("Email tidak ditemukan. Pastikan email sudah terdaftar.")
             else:
-                password_ditemukan = accounts[email_cek]
+                pw = accounts[email_cek]
                 st.success(f"Password untuk **{email_cek}** adalah:")
                 st.markdown(f"""
                 <div style='background:#eaf4fb; border:1.5px solid #2980b9; border-radius:8px;
                             padding:14px 18px; font-size:20px; font-weight:700;
-                            color:#1a252f; text-align:center; letter-spacing:2px;
-                            margin-top:8px'>
-                    {password_ditemukan}
+                            color:#1a252f; text-align:center; letter-spacing:2px; margin-top:8px'>
+                    {pw}
                 </div>
                 """, unsafe_allow_html=True)
                 st.caption("Simpan password Anda di tempat yang aman.")
@@ -293,9 +290,9 @@ def run_clustering(df, k):
     nama      = get_nama_klaster(k)
     label_map = {c: nama[r-1] for c, r in rank.items()}
     df['klaster'] = df['klaster_raw'].map(label_map)
-    sil = silhouette_score(X_scaled, km.labels_)
-    db  = davies_bouldin_score(X_scaled, km.labels_)
-    return df, X_scaled, sil, db
+    sil     = silhouette_score(X_scaled, km.labels_)
+    inertia = km.inertia_
+    return df, X_scaled, sil, inertia
 
 # ── SIDEBAR ───────────────────────────────────────────────────
 with st.sidebar:
@@ -330,7 +327,7 @@ with st.sidebar:
         )
     st.divider()
 
-# ── BANNER HTML (dipakai di dalam tiap tab) ─────────────────
+# ── BANNER ───────────────────────────────────────────────────
 BANNER_HTML = """
 <div style="background:linear-gradient(135deg,#0a3d62 0%,#1a6fa8 60%,#2980b9 100%);
             padding:28px 36px; border-radius:12px; margin-bottom:24px;
@@ -349,7 +346,6 @@ BANNER_HTML = """
 </div>
 """
 
-# ── BANNER di atas tabs ──────────────────────────────────────
 st.markdown(BANNER_HTML, unsafe_allow_html=True)
 
 # ── TABS ──────────────────────────────────────────────────────
@@ -364,7 +360,7 @@ tab1, tab2, tab3, tab4, tab5, tab_manual, tab_logout = st.tabs([
 ])
 
 # ═══════════════════════════════════════════════════════════════
-# TAB INPUT MANUAL (tidak butuh file upload)
+# TAB INPUT MANUAL
 # ═══════════════════════════════════════════════════════════════
 with tab_manual:
     st.subheader("📥 Input Data Manual")
@@ -377,7 +373,6 @@ with tab_manual:
         st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
         st.caption(f"Tabel akan memiliki **{n_baris} baris** × **5 kolom** (Tahun, Bulan, Arus Kas, Pendapatan, Beban)")
 
-    # Buat template default atau pertahankan data yang sudah ada
     if st.session_state['manual_df'] is not None and len(st.session_state['manual_df']) == n_baris:
         default_data = st.session_state['manual_df']
     else:
@@ -424,7 +419,6 @@ with tab_manual:
     col_s, col_g, col_r2 = st.columns([1, 1, 1])
     with col_s:
         if st.button("💾 Simpan & Gunakan Data Ini", use_container_width=True, type="primary"):
-            # Validasi
             if edited_df[FEATURES].isnull().any().any():
                 st.error("Ada nilai kosong. Pastikan semua sel terisi.")
             elif (edited_df[FEATURES] == 0).all().all():
@@ -443,7 +437,6 @@ with tab_manual:
             st.session_state['use_manual'] = False
             st.rerun()
     with col_r2:
-        # Download template kosong
         buf_tmpl = io.BytesIO()
         template = pd.DataFrame({
             'tahun': [''] * 12,
@@ -474,38 +467,32 @@ use_manual_data = st.session_state['use_manual'] and st.session_state['manual_df
 data_loaded     = uploaded_file is not None or use_manual_data
 
 if not data_loaded:
-    with tab1:
-        st.info("Upload file Excel di sidebar **atau** isi data manual di tab **Input Manual** untuk memulai analisis.")
-    with tab2:
-        st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
-    with tab3:
-        st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
-    with tab4:
-        st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
-    with tab5:
-        st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
+    for t in [tab1, tab2, tab3, tab4, tab5]:
+        with t:
+            st.info("Upload file Excel di sidebar **atau** isi data manual di tab **Input Manual** untuk memulai analisis.")
     with tab_logout:
         col_l, col_m, col_r = st.columns([1, 1.2, 1])
         with col_m:
             st.markdown("<div style='text-align:center;font-size:48px;margin:24px 0'>🚪</div>", unsafe_allow_html=True)
             st.markdown("<div style='text-align:center;font-size:18px;font-weight:600;color:#2c3e50;margin-bottom:8px'>Yakin ingin keluar?</div>", unsafe_allow_html=True)
             if st.button("Ya, Logout", use_container_width=True, type="primary"):
-                st.session_state['logged_in'] = False
+                st.session_state['logged_in']    = False
                 st.session_state['current_user'] = ""
-                st.session_state['page'] = "login"
+                st.session_state['page']         = "login"
                 st.rerun()
     st.stop()
 
-# ── Load data dari sumber yang aktif ─────────────────────────
+# ── Load data ─────────────────────────────────────────────────
 if use_manual_data:
     df_raw = st.session_state['manual_df'].copy()
 else:
     df_raw = load_data(uploaded_file, sheet_name)
 
-df, X_scaled, sil, db = run_clustering(df_raw, K)
+df, X_scaled, sil, inertia_terpilih = run_clustering(df_raw, K)
 COLORS = get_colors(K)
 NAMA_K = get_nama_klaster(K)
 aktif  = [n for n in NAMA_K if n in df['klaster'].values]
+
 
 # ═══════════════════════════════════════════════════════════════
 # TAB 1 — RINGKASAN DATA
@@ -563,27 +550,31 @@ with tab2:
     scaler_opt = StandardScaler()
     Xs_opt     = scaler_opt.fit_transform(df_raw[FEATURES].values)
 
-    K_range, inertia, sil_scores, db_scores = range(2,9), [], [], []
+    K_range    = range(2, 9)
+    inertia_list = []
+    sil_scores   = []
+
     with st.spinner("Menghitung metrik untuk tiap K..."):
         for k in K_range:
             km     = KMeans(n_clusters=k, random_state=42, n_init=10)
             labels = km.fit_predict(Xs_opt)
-            inertia.append(km.inertia_)
+            inertia_list.append(km.inertia_)
             sil_scores.append(silhouette_score(Xs_opt, labels))
-            db_scores.append(davies_bouldin_score(Xs_opt, labels))
 
-    ia   = np.array(inertia); kv = np.array(list(K_range))
+    # Deteksi elbow otomatis
+    ia   = np.array(inertia_list)
+    kv   = np.array(list(K_range))
     p1, p2 = np.array([kv[0], ia[0]]), np.array([kv[-1], ia[-1]])
     dists  = [np.abs(np.cross(p2-p1, p1-np.array([kv[i], ia[i]]))) / np.linalg.norm(p2-p1)
               for i in range(len(kv))]
     elbow_k    = int(kv[np.argmax(dists)])
     sil_best_k = list(K_range)[sil_scores.index(max(sil_scores))]
 
+    # Tabel metrik (tanpa Davies-Bouldin)
     metrics_df = pd.DataFrame({
         'K': list(K_range),
-        'Inertia': [round(v,2) for v in inertia],
-        'Silhouette Score': [round(v,4) for v in sil_scores],
-        'Davies-Bouldin': [round(v,4) for v in db_scores]
+        'Inertia (SSE)': [round(v, 2) for v in inertia_list],
+        'Silhouette Score': [round(v, 4) for v in sil_scores],
     }).set_index('K')
     st.dataframe(metrics_df, use_container_width=True)
 
@@ -592,19 +583,34 @@ with tab2:
     c2.metric("Silhouette tertinggi", f"K = {sil_best_k} ({max(sil_scores):.4f})")
     c3.metric("K yang digunakan",     f"K = {K}")
 
+    # Grafik: Elbow + Silhouette (2 panel)
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
     fig.patch.set_facecolor('#FAFAFA')
-    axes[0].plot(list(K_range), inertia, 'o-', color='#2980b9', linewidth=2.5, markersize=8)
-    axes[0].axvline(x=K, color='#e74c3c', linestyle='--', linewidth=2, label=f'K terpilih = {K}')
-    axes[0].set_title('Elbow Method (Inertia)', fontsize=11, fontweight='bold')
-    axes[0].set_xlabel('Jumlah Klaster (K)'); axes[0].set_ylabel('Inertia')
-    axes[0].legend(fontsize=10); axes[0].grid(alpha=0.3); axes[0].set_facecolor('#FAFAFA')
+
+    axes[0].plot(list(K_range), inertia_list, 'o-', color='#2980b9', linewidth=2.5, markersize=8)
+    axes[0].axvline(x=elbow_k, color='#27ae60', linestyle='--', linewidth=1.8,
+                    label=f'Elbow = {elbow_k}')
+    axes[0].axvline(x=K, color='#e74c3c', linestyle='--', linewidth=2,
+                    label=f'K terpilih = {K}')
+    axes[0].set_title('Elbow Method (Inertia / SSE)', fontsize=11, fontweight='bold')
+    axes[0].set_xlabel('Jumlah Klaster (K)')
+    axes[0].set_ylabel('Inertia')
+    axes[0].legend(fontsize=10)
+    axes[0].grid(alpha=0.3)
+    axes[0].set_facecolor('#FAFAFA')
 
     axes[1].plot(list(K_range), sil_scores, 's-', color='#8e44ad', linewidth=2.5, markersize=8)
-    axes[1].axvline(x=K, color='#e74c3c', linestyle='--', linewidth=2, label=f'K terpilih = {K}')
+    axes[1].axvline(x=sil_best_k, color='#27ae60', linestyle='--', linewidth=1.8,
+                    label=f'Terbaik = {sil_best_k}')
+    axes[1].axvline(x=K, color='#e74c3c', linestyle='--', linewidth=2,
+                    label=f'K terpilih = {K}')
     axes[1].set_title('Silhouette Score', fontsize=11, fontweight='bold')
-    axes[1].set_xlabel('Jumlah Klaster (K)'); axes[1].set_ylabel('Silhouette Score')
-    axes[1].legend(fontsize=10); axes[1].grid(alpha=0.3); axes[1].set_facecolor('#FAFAFA')
+    axes[1].set_xlabel('Jumlah Klaster (K)')
+    axes[1].set_ylabel('Silhouette Score')
+    axes[1].legend(fontsize=10)
+    axes[1].grid(alpha=0.3)
+    axes[1].set_facecolor('#FAFAFA')
+
     plt.tight_layout()
     st.pyplot(fig)
 
@@ -612,9 +618,9 @@ with tab2:
         idx_K   = list(K_range).index(K)
         selisih = max(sil_scores) - sil_scores[idx_K]
         st.markdown(f"""
-- **Elbow Method** menunjukkan siku paling jelas pada **K = {elbow_k}**.
-- Silhouette Score tertinggi ada di **K = {sil_best_k}** ({max(sil_scores):.4f}), namun K = {K} ({sil_scores[idx_K]:.4f}) tidak berbeda jauh (selisih {selisih:.4f}).
-- **K = {K}** dipilih karena menghasilkan {K} klaster yang bisa diinterpretasikan secara manajerial: {", ".join(NAMA_K)}.
+- **Elbow Method** menunjukkan siku paling jelas pada **K = {elbow_k}** (inertia mulai landai di titik ini).
+- **Silhouette Score** tertinggi ada di **K = {sil_best_k}** ({max(sil_scores):.4f}), namun K = {K} ({sil_scores[idx_K]:.4f}) tidak berbeda jauh (selisih {selisih:.4f}).
+- **K = {K}** dipilih karena menghasilkan {K} klaster yang dapat diinterpretasikan secara manajerial: {", ".join(NAMA_K)}.
         """)
 
 
@@ -624,9 +630,11 @@ with tab2:
 with tab3:
     st.subheader(f"Hasil K-Means Clustering (K={K})")
 
+    # Dua metrik: Silhouette Score & Elbow (Inertia)
     c1, c2 = st.columns(2)
-    c1.metric("Silhouette Score",     f"{sil:.4f}", help="Mendekati 1 = sangat baik")
-    c2.metric("Davies-Bouldin Index", f"{db:.4f}",  help="Mendekati 0 = sangat baik")
+    c1.metric("Silhouette Score", f"{sil:.4f}", help="Mendekati 1 = sangat baik")
+    c2.metric("Elbow — Inertia (SSE)", f"{inertia_terpilih:,.2f}",
+              help="Jumlah kuadrat jarak tiap titik ke pusat klasternya; makin kecil makin kompak")
 
     st.subheader("Statistik Per Klaster (rata-rata, juta Rp)")
     summary = df.groupby('klaster')[FEATURES].mean().round(1)
@@ -688,9 +696,12 @@ with tab4:
         ax1.axvline(x=xi, color='#aaa', linewidth=0.7, linestyle=':', alpha=0.6)
         ax1.text(xi+0.3, df_s['arus_kas_operasi'].max()*0.97, str(yr), fontsize=8, color='#555')
     ax1.set_ylabel('Arus Kas (juta Rp)', fontsize=9)
-    ax1.set_xticks([]); ax1.legend(fontsize=8, loc='upper left', ncol=min(K,3))
-    ax1.grid(axis='y', alpha=0.25); ax1.set_facecolor('white')
-    plt.tight_layout(); st.pyplot(fig1)
+    ax1.set_xticks([])
+    ax1.legend(fontsize=8, loc='upper left', ncol=min(K,3))
+    ax1.grid(axis='y', alpha=0.25)
+    ax1.set_facecolor('white')
+    plt.tight_layout()
+    st.pyplot(fig1)
 
     c1, c2 = st.columns(2)
     with c1:
@@ -704,8 +715,11 @@ with tab4:
                         edgecolors='white', linewidth=0.6)
         ax2.set_xlabel('Pendapatan (miliar Rp)', fontsize=9)
         ax2.set_ylabel('Arus Kas (miliar Rp)', fontsize=9)
-        ax2.legend(fontsize=7); ax2.grid(alpha=0.25); ax2.set_facecolor('white')
-        plt.tight_layout(); st.pyplot(fig2)
+        ax2.legend(fontsize=7)
+        ax2.grid(alpha=0.25)
+        ax2.set_facecolor('white')
+        plt.tight_layout()
+        st.pyplot(fig2)
 
     with c2:
         st.markdown("#### Distribusi Klaster per Tahun")
@@ -716,10 +730,14 @@ with tab4:
         cross_t[cols_ok].plot(kind='bar', ax=ax3,
                               color=[COLORS[c] for c in cols_ok],
                               edgecolor='white', width=0.7)
-        ax3.set_xlabel('Tahun', fontsize=9); ax3.set_ylabel('Jumlah Bulan', fontsize=9)
+        ax3.set_xlabel('Tahun', fontsize=9)
+        ax3.set_ylabel('Jumlah Bulan', fontsize=9)
         ax3.set_xticklabels(ax3.get_xticklabels(), rotation=45, ha='right', fontsize=8)
-        ax3.legend(fontsize=7); ax3.grid(axis='y', alpha=0.25); ax3.set_facecolor('white')
-        plt.tight_layout(); st.pyplot(fig3)
+        ax3.legend(fontsize=7)
+        ax3.grid(axis='y', alpha=0.25)
+        ax3.set_facecolor('white')
+        plt.tight_layout()
+        st.pyplot(fig3)
 
     st.markdown("#### Heatmap Klaster Per Bulan Per Tahun")
     klaster_num_map   = {kl: i for i, kl in enumerate(aktif)}
@@ -745,7 +763,8 @@ with tab4:
                 label = inisial_map.get(aktif[int(val)], '?')
                 ax4.text(j, i, label, ha='center', va='center',
                          fontsize=9, fontweight='bold', color='white')
-    plt.tight_layout(); st.pyplot(fig4)
+    plt.tight_layout()
+    st.pyplot(fig4)
 
 
 # ═══════════════════════════════════════════════════════════════
