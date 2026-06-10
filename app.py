@@ -79,8 +79,7 @@ st.markdown("""
         margin-top: 0rem !important;
     }
     header[data-testid="stHeader"] {
-        height: 0rem !important;
-        visibility: hidden;
+        background: transparent !important;
     }
 </style>
 """, unsafe_allow_html=True)
