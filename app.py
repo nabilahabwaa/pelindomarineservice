@@ -340,25 +340,25 @@ with st.sidebar:
         )
     st.divider()
 
-# ── BANNER (satu kali, di atas tabs) ─────────────────────────
-BANNER_HTML = """
+# ── BANNER (compact, satu kali, di atas tabs) ────────────────
+st.markdown("""
 <div style="background:linear-gradient(135deg,#0a3d62 0%,#1a6fa8 60%,#2980b9 100%);
-            padding:28px 36px; border-radius:12px; margin-bottom:16px;
-            display:flex; align-items:center; gap:24px">
+            padding:12px 24px; border-radius:10px; margin-bottom:8px;
+            display:flex; align-items:center; gap:16px">
+    <span style="font-size:24px; line-height:1">🚢</span>
     <div>
-        <div style="font-size:12px; color:#aed6f1; font-weight:700; letter-spacing:2px; margin-bottom:4px">
+        <span style="font-size:11px; color:#aed6f1; font-weight:700; letter-spacing:2px; margin-right:12px">
             PT PELINDO MARINE SERVICE
-        </div>
-        <div style="font-size:22px; font-weight:800; color:white; line-height:1.3">
+        </span>
+        <span style="font-size:15px; font-weight:800; color:white;">
             Sistem Monitoring Arus Kas Operasional
-        </div>
-        <div style="font-size:13px; color:#aed6f1; margin-top:6px">
-            Berbasis K-Means Clustering &amp; Dashboard Interaktif
-        </div>
+        </span>
+        <span style="font-size:12px; color:#aed6f1; margin-left:10px">
+            — Berbasis K-Means Clustering &amp; Dashboard Interaktif
+        </span>
     </div>
 </div>
-"""
-st.markdown(BANNER_HTML, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # ── TABS ──────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5, tab_manual, tab_logout = st.tabs([
