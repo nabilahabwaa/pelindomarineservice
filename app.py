@@ -271,13 +271,64 @@ def get_colors(k):
     return {nama[i]: to_hex(cmap(i / max(k-1, 1))) for i in range(k)}
 
 @st.cache_data
+@st.cache_data
 def load_data(file, sheet):
-    df = pd.read_excel(file, sheet_name=sheet)
-    df = df[df['tahun'] != 'Total'].copy()
-    df = df[df['bulan'].notna()].copy()
-    df['tahun']     = df['tahun'].ffill().astype(float).astype(int)
-    df['bulan_num'] = df['bulan'].map({b: i+1 for i, b in enumerate(BULAN_ORDER)})
-    return df
+    try:
+        # Cek apakah sheet ada
+        xl = pd.ExcelFile(file)
+        if sheet not in xl.sheet_names:
+            raise ValueError(
+                f"Sheet **'{sheet}'** tidak ditemukan dalam file.\n\n"
+                f"Sheet yang tersedia: **{', '.join(xl.sheet_names)}**"
+            )
+
+        df = pd.read_excel(file, sheet_name=sheet)
+
+        # Cek kolom wajib
+        required_cols = ['tahun', 'bulan', 'arus_kas_operasi', 'pendapatan_operasi', 'beban_operasi']
+        missing_cols = [c for c in required_cols if c not in df.columns]
+        if missing_cols:
+            raise ValueError(
+                f"Kolom berikut **tidak ditemukan** di sheet '{sheet}':\n"
+                f"**{', '.join(missing_cols)}**\n\n"
+                f"Kolom yang dibutuhkan: `{', '.join(required_cols)}`\n\n"
+                f"Kolom yang ada di file: `{', '.join(df.columns.tolist())}`"
+            )
+
+        # Cek apakah kolom numerik bisa diproses
+        for col in ['arus_kas_operasi', 'pendapatan_operasi', 'beban_operasi']:
+            df_test = df[df['tahun'] != 'Total'].copy()
+            non_num = df_test[col].dropna()
+            try:
+                pd.to_numeric(non_num, errors='raise')
+            except Exception:
+                raise ValueError(
+                    f"Kolom **'{col}'** mengandung nilai yang bukan angka. "
+                    f"Pastikan kolom tersebut hanya berisi angka (juta Rp)."
+                )
+
+        df = df[df['tahun'] != 'Total'].copy()
+        df = df[df['bulan'].notna()].copy()
+        df['tahun']     = df['tahun'].ffill().astype(float).astype(int)
+        df['bulan_num'] = df['bulan'].map({b: i+1 for i, b in enumerate(BULAN_ORDER)})
+
+        # Cek apakah kolom bulan valid
+        invalid_bulan = df[df['bulan_num'].isna()]['bulan'].unique()
+        if len(invalid_bulan) > 0:
+            raise ValueError(
+                f"Kolom **'bulan'** mengandung nilai tidak valid: **{', '.join(str(b) for b in invalid_bulan)}**\n\n"
+                f"Nilai bulan yang valid: `{', '.join(BULAN_ORDER)}`"
+            )
+
+        if len(df) == 0:
+            raise ValueError("File berhasil dibaca, tetapi **tidak ada baris data** yang valid setelah filter.")
+
+        return df
+
+    except ValueError:
+        raise  # re-raise error validasi kita sendiri
+    except Exception as e:
+        raise ValueError(f"Gagal membaca file Excel: **{str(e)}**\n\nPastikan file tidak rusak dan berformat `.xlsx`.")
 
 def run_clustering(df, k):
     scaler   = StandardScaler()
@@ -486,7 +537,21 @@ if not data_loaded:
 if use_manual_data:
     df_raw = st.session_state['manual_df'].copy()
 else:
-    df_raw = load_data(uploaded_file, sheet_name)
+    try:
+        df_raw = load_data(uploaded_file, sheet_name)
+    except ValueError as e:
+        st.error(f"⚠️ **Format file tidak sesuai**\n\n{str(e)}")
+        st.markdown("""
+        **Panduan format file yang benar:**
+        - Format file: `.xlsx`
+        - Nama sheet sesuai yang diisi di sidebar (default: `bulanan`)
+        - Kolom wajib: `tahun`, `bulan`, `arus_kas_operasi`, `pendapatan_operasi`, `beban_operasi`
+        - Kolom `bulan` harus berisi: `Jan`, `Feb`, `Mar`, `Apr`, `Mei`, `Jun`, `Jul`, `Agu`, `Sep`, `Okt`, `Nov`, `Des`
+        - Kolom angka harus berisi nilai numerik (juta Rp)
+        
+        💡 Download template di tab **Input Manual → Download Template Excel** sebagai referensi format.
+        """)
+        st.stop()
 
 df, X_scaled, sil, inertia_terpilih = run_clustering(df_raw, K)
 COLORS = get_colors(K)
