@@ -79,7 +79,15 @@ st.markdown("""
         margin-top: 0rem !important;
     }
     header[data-testid="stHeader"] {
+        height: 0rem !important;
+        min-height: 0rem !important;
         background: transparent !important;
+    }
+    [data-testid="stToolbar"] {
+        position: fixed !important;
+        top: 0.3rem !important;
+        right: 1rem !important;
+        z-index: 9999 !important;
     }
 </style>
 """, unsafe_allow_html=True)
