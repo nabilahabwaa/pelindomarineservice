@@ -69,7 +69,7 @@ st.markdown("""
         text-decoration: underline;
     }
     .block-container {
-        padding-top: 0rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 0rem !important;
     }
     [data-testid="stAppViewContainer"] > section > div:first-child {
