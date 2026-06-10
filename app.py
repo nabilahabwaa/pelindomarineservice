@@ -68,9 +68,22 @@ st.markdown("""
         padding: 0;
         text-decoration: underline;
     }
+    .block-container {
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
+    }
+    [data-testid="stAppViewContainer"] > section > div:first-child {
+        padding-top: 0rem !important;
+    }
+    div[data-testid="stTabs"] {
+        margin-top: 0rem !important;
+    }
+    header[data-testid="stHeader"] {
+        height: 0rem !important;
+        visibility: hidden;
+    }
 </style>
 """, unsafe_allow_html=True)
-
 
 # ══════════════════════════════════════════════════════════════
 #  HALAMAN LOGIN
