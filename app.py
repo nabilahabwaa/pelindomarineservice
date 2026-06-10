@@ -68,19 +68,6 @@ st.markdown("""
         padding: 0;
         text-decoration: underline;
     }
-
-    /* ── TAB NAIK, BANNER TETAP FULL, TOOLBAR TETAP ── */
-    .block-container {
-        padding-top: 0.5rem !important;
-    }
-    div[data-testid="stTabs"] > div:first-child {
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        background: white;
-        padding-top: 4px;
-        border-bottom: 1px solid #e0e0e0;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -330,7 +317,17 @@ with st.sidebar:
         )
     st.divider()
 
-# ── BANNER HTML (dipakai di dalam tiap tab) ─────────────────
+# ── TABS ──────────────────────────────────────────────────────
+tab1, tab2, tab3, tab4, tab5, tab_manual, tab_logout = st.tabs([
+    "Ringkasan Data",
+    "Penentuan K Optimal",
+    "Hasil Clustering",
+    "Visualisasi",
+    "Export",
+    "Input Manual",
+    "Logout"
+])
+
 BANNER_HTML = """
 <div style="background:linear-gradient(135deg,#0a3d62 0%,#1a6fa8 60%,#2980b9 100%);
             padding:28px 36px; border-radius:12px; margin-bottom:24px;
@@ -348,17 +345,6 @@ BANNER_HTML = """
     </div>
 </div>
 """
-
-# ── TABS (langsung di bawah toolbar, tanpa apapun di atasnya) ─
-tab1, tab2, tab3, tab4, tab5, tab_manual, tab_logout = st.tabs([
-    "Ringkasan Data",
-    "Penentuan K Optimal",
-    "Hasil Clustering",
-    "Visualisasi",
-    "Export",
-    "Input Manual",
-    "Logout"
-])
 
 # ═══════════════════════════════════════════════════════════════
 # TAB INPUT MANUAL (tidak butuh file upload)
@@ -473,6 +459,7 @@ data_loaded     = uploaded_file is not None or use_manual_data
 
 if not data_loaded:
     with tab1:
+        st.markdown(BANNER_HTML, unsafe_allow_html=True)
         st.info("Upload file Excel di sidebar **atau** isi data manual di tab **Input Manual** untuk memulai analisis.")
     with tab2:
         st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
