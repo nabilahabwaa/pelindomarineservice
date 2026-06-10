@@ -68,29 +68,32 @@ st.markdown("""
         padding: 0;
         text-decoration: underline;
     }
-    .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-    }
-    [data-testid="stAppViewContainer"] > section > div:first-child {
-        padding-top: 0rem !important;
+
+    /* ── TAB MENTOK KE ATAS ── */
+    div[data-testid="stAppViewContainer"] > section[data-testid="stMain"] > div[data-testid="stMainBlockContainer"] {
+        padding-top: 0 !important;
     }
     div[data-testid="stTabs"] {
-        margin-top: 0rem !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
     }
-    header[data-testid="stHeader"] {
-        height: 0rem !important;
-        min-height: 0rem !important;
-        background: transparent !important;
+    div[data-testid="stTabs"] > div:first-child {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background: white;
+        padding-top: 4px;
+        padding-bottom: 0;
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 0;
     }
-    [data-testid="stToolbar"] {
-        position: fixed !important;
-        top: 0.3rem !important;
-        right: 1rem !important;
-        z-index: 9999 !important;
+    /* Kurangi padding atas halaman utama */
+    .block-container {
+        padding-top: 0.5rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════
 #  HALAMAN LOGIN
@@ -337,20 +340,10 @@ with st.sidebar:
         )
     st.divider()
 
-# ── TABS ──────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5, tab_manual, tab_logout = st.tabs([
-    "Ringkasan Data",
-    "Penentuan K Optimal",
-    "Hasil Clustering",
-    "Visualisasi",
-    "Export",
-    "Input Manual",
-    "Logout"
-])
-
+# ── BANNER (satu kali, di atas tabs) ─────────────────────────
 BANNER_HTML = """
 <div style="background:linear-gradient(135deg,#0a3d62 0%,#1a6fa8 60%,#2980b9 100%);
-            padding:28px 36px; border-radius:12px; margin-bottom:24px;
+            padding:28px 36px; border-radius:12px; margin-bottom:16px;
             display:flex; align-items:center; gap:24px">
     <div>
         <div style="font-size:12px; color:#aed6f1; font-weight:700; letter-spacing:2px; margin-bottom:4px">
@@ -365,12 +358,23 @@ BANNER_HTML = """
     </div>
 </div>
 """
+st.markdown(BANNER_HTML, unsafe_allow_html=True)
+
+# ── TABS ──────────────────────────────────────────────────────
+tab1, tab2, tab3, tab4, tab5, tab_manual, tab_logout = st.tabs([
+    "Ringkasan Data",
+    "Penentuan K Optimal",
+    "Hasil Clustering",
+    "Visualisasi",
+    "Export",
+    "Input Manual",
+    "Logout"
+])
 
 # ═══════════════════════════════════════════════════════════════
 # TAB INPUT MANUAL (tidak butuh file upload)
 # ═══════════════════════════════════════════════════════════════
 with tab_manual:
-    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("📥 Input Data Manual")
     st.markdown("Isi tabel di bawah sesuai data keuangan. Data ini bisa langsung digunakan untuk analisis clustering.")
 
@@ -479,7 +483,6 @@ data_loaded     = uploaded_file is not None or use_manual_data
 
 if not data_loaded:
     with tab1:
-        st.markdown(BANNER_HTML, unsafe_allow_html=True)
         st.info("Upload file Excel di sidebar **atau** isi data manual di tab **Input Manual** untuk memulai analisis.")
     with tab2:
         st.info("Upload file Excel di sidebar atau isi data manual untuk memulai analisis.")
@@ -516,7 +519,6 @@ aktif  = [n for n in NAMA_K if n in df['klaster'].values]
 # TAB 1 — RINGKASAN DATA
 # ═══════════════════════════════════════════════════════════════
 with tab1:
-    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     if use_manual_data:
         st.info("📋 Menggunakan **data manual** yang diinput di tab Input Manual.")
     st.subheader("Ringkasan Data")
@@ -564,7 +566,6 @@ with tab1:
 # TAB 2 — PENENTUAN K OPTIMAL
 # ═══════════════════════════════════════════════════════════════
 with tab2:
-    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Penentuan K Optimal")
 
     scaler_opt = StandardScaler()
@@ -629,7 +630,6 @@ with tab2:
 # TAB 3 — HASIL CLUSTERING
 # ═══════════════════════════════════════════════════════════════
 with tab3:
-    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader(f"Hasil K-Means Clustering (K={K})")
 
     c1, c2 = st.columns(2)
@@ -674,7 +674,6 @@ with tab3:
 # TAB 4 — VISUALISASI
 # ═══════════════════════════════════════════════════════════════
 with tab4:
-    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Visualisasi Hasil Clustering")
 
     df_s = df.sort_values(['tahun','bulan_num']).reset_index(drop=True)
@@ -761,7 +760,6 @@ with tab4:
 # TAB 5 — EXPORT
 # ═══════════════════════════════════════════════════════════════
 with tab5:
-    st.markdown(BANNER_HTML, unsafe_allow_html=True)
     st.subheader("Export Hasil")
 
     out_cols = ['tahun','bulan','arus_kas_operasi','pendapatan_operasi','beban_operasi','klaster']
