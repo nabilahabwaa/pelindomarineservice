@@ -271,10 +271,8 @@ def get_colors(k):
     return {nama[i]: to_hex(cmap(i / max(k-1, 1))) for i in range(k)}
 
 @st.cache_data
-@st.cache_data
 def load_data(file, sheet):
     try:
-        # Cek apakah sheet ada
         xl = pd.ExcelFile(file)
         if sheet not in xl.sheet_names:
             raise ValueError(
@@ -284,7 +282,6 @@ def load_data(file, sheet):
 
         df = pd.read_excel(file, sheet_name=sheet)
 
-        # Cek kolom wajib
         required_cols = ['tahun', 'bulan', 'arus_kas_operasi', 'pendapatan_operasi', 'beban_operasi']
         missing_cols = [c for c in required_cols if c not in df.columns]
         if missing_cols:
@@ -295,7 +292,6 @@ def load_data(file, sheet):
                 f"Kolom yang ada di file: `{', '.join(df.columns.tolist())}`"
             )
 
-        # Cek apakah kolom numerik bisa diproses
         for col in ['arus_kas_operasi', 'pendapatan_operasi', 'beban_operasi']:
             df_test = df[df['tahun'] != 'Total'].copy()
             non_num = df_test[col].dropna()
@@ -312,7 +308,6 @@ def load_data(file, sheet):
         df['tahun']     = df['tahun'].ffill().astype(float).astype(int)
         df['bulan_num'] = df['bulan'].map({b: i+1 for i, b in enumerate(BULAN_ORDER)})
 
-        # Cek apakah kolom bulan valid
         invalid_bulan = df[df['bulan_num'].isna()]['bulan'].unique()
         if len(invalid_bulan) > 0:
             raise ValueError(
@@ -326,7 +321,7 @@ def load_data(file, sheet):
         return df
 
     except ValueError:
-        raise  # re-raise error validasi kita sendiri
+        raise
     except Exception as e:
         raise ValueError(f"Gagal membaca file Excel: **{str(e)}**\n\nPastikan file tidak rusak dan berformat `.xlsx`.")
 
@@ -574,14 +569,14 @@ with tab1:
     c4.metric("Jumlah Tahun",     df['tahun'].nunique())
 
     st.subheader("Statistik Deskriptif (juta Rp)")
-    desc = df[FEATURES].describe().round(2)
+    desc = df[FEATURES].describe().round(5)
     desc.index = ['Jumlah','Rata-rata','Std Dev','Min','Q1','Median','Q3','Maks']
     st.dataframe(desc, use_container_width=True)
 
     ca, cb = st.columns(2)
     with ca:
         st.subheader("Koefisien Variasi (%)")
-        cv = {f: round((df[f].std()/df[f].mean())*100, 1) for f in FEATURES}
+        cv = {f: round((df[f].std()/df[f].mean())*100, 5) for f in FEATURES}
         st.dataframe(pd.DataFrame(cv, index=['CV (%)']).T.rename_axis("Variabel"),
                      use_container_width=True)
     with cb:
@@ -589,15 +584,21 @@ with tab1:
         rows = []
         for f in FEATURES:
             stat, p = stats.shapiro(df[f])
-            rows.append({'Variabel': f, 'Statistik': round(stat,4),
-                         'p-value': round(p,4),
+            rows.append({'Variabel': f, 'Statistik': round(stat, 5),
+                         'p-value': round(p, 5),
                          'Distribusi': 'Normal' if p > 0.05 else 'Tidak Berdistribusi Normal'})
-        st.dataframe(pd.DataFrame(rows).set_index('Variabel'), use_container_width=True)
-        st.caption("→ Data tidak berdistribusi normal → normalisasi Z-Score tepat digunakan sebelum clustering.")
+        df_norm = pd.DataFrame(rows).set_index('Variabel')
+        st.dataframe(df_norm, use_container_width=True)
+        # Cek apakah semua distribusi Normal
+        all_normal = all(r['Distribusi'] == 'Normal' for r in rows)
+        if all_normal:
+            st.caption("→ Semua variabel berdistribusi normal → normalisasi Z-Score tetap digunakan sebelum clustering untuk menyamakan skala.")
+        else:
+            st.caption("→ Data tidak berdistribusi normal → normalisasi Z-Score tepat digunakan sebelum clustering.")
 
     st.subheader("Rasio Arus Kas / Pendapatan per Tahun (%)")
     rasio = df.groupby('tahun').apply(
-        lambda g: round(g['arus_kas_operasi'].sum() / g['pendapatan_operasi'].sum() * 100, 2)
+        lambda g: round(g['arus_kas_operasi'].sum() / g['pendapatan_operasi'].sum() * 100, 5)
     ).reset_index(name='Rasio (%)')
     rasio['Keterangan'] = rasio['Rasio (%)'].apply(lambda r: '⚠️ ANOMALI' if r < 2 else '✅ Normal')
     st.dataframe(rasio.set_index('tahun'), use_container_width=True)
@@ -612,10 +613,24 @@ with tab1:
 with tab2:
     st.subheader("Penentuan K Optimal")
 
+    n_samples = len(df_raw)
+
+    # Validasi: data minimal harus ada cukup baris untuk K
+    if n_samples < 4:
+        st.warning(f"⚠️ Data terlalu sedikit ({n_samples} baris) untuk analisis K optimal. Minimal diperlukan 4 baris data.")
+        st.stop()
+
     scaler_opt = StandardScaler()
     Xs_opt     = scaler_opt.fit_transform(df_raw[FEATURES].values)
 
-    K_range    = range(2, 9)
+    # Batasi K_range agar tidak melebihi jumlah sampel
+    max_k      = min(8, n_samples - 1)
+    K_range    = range(2, max_k + 1)
+
+    if len(list(K_range)) < 1:
+        st.warning("⚠️ Tidak cukup variasi K untuk dievaluasi. Tambahkan lebih banyak data.")
+        st.stop()
+
     inertia_list = []
     sil_scores   = []
 
@@ -624,7 +639,12 @@ with tab2:
             km     = KMeans(n_clusters=k, random_state=42, n_init=10)
             labels = km.fit_predict(Xs_opt)
             inertia_list.append(km.inertia_)
-            sil_scores.append(silhouette_score(Xs_opt, labels))
+            # FIX: tangkap error silhouette_score jika klaster tidak valid
+            try:
+                sil_val = silhouette_score(Xs_opt, labels)
+            except ValueError:
+                sil_val = 0.0
+            sil_scores.append(sil_val)
 
     # Deteksi elbow otomatis
     ia   = np.array(inertia_list)
@@ -635,17 +655,17 @@ with tab2:
     elbow_k    = int(kv[np.argmax(dists)])
     sil_best_k = list(K_range)[sil_scores.index(max(sil_scores))]
 
-    # Tabel metrik (tanpa Davies-Bouldin)
+    # Tabel metrik dengan 5 desimal
     metrics_df = pd.DataFrame({
         'K': list(K_range),
-        'Inertia (SSE)': [round(v, 2) for v in inertia_list],
-        'Silhouette Score': [round(v, 4) for v in sil_scores],
+        'Inertia (SSE)': [round(v, 5) for v in inertia_list],
+        'Silhouette Score': [round(v, 5) for v in sil_scores],
     }).set_index('K')
     st.dataframe(metrics_df, use_container_width=True)
 
     c1, c2, c3 = st.columns(3)
     c1.metric("Elbow terdeteksi",     f"K = {elbow_k}")
-    c2.metric("Silhouette tertinggi", f"K = {sil_best_k} ({max(sil_scores):.4f})")
+    c2.metric("Silhouette tertinggi", f"K = {sil_best_k} ({max(sil_scores):.5f})")
     c3.metric("K yang digunakan",     f"K = {K}")
 
     # Grafik: Elbow + Silhouette (2 panel)
@@ -680,11 +700,11 @@ with tab2:
     st.pyplot(fig)
 
     with st.expander("📝 Interpretasi pemilihan K"):
-        idx_K   = list(K_range).index(K)
-        selisih = max(sil_scores) - sil_scores[idx_K]
+        idx_K   = list(K_range).index(K) if K in K_range else 0
+        selisih = round(max(sil_scores) - sil_scores[idx_K], 5)
         st.markdown(f"""
 - **Elbow Method** menunjukkan siku paling jelas pada **K = {elbow_k}** (inertia mulai landai di titik ini).
-- **Silhouette Score** tertinggi ada di **K = {sil_best_k}** ({max(sil_scores):.4f}), namun K = {K} ({sil_scores[idx_K]:.4f}) tidak berbeda jauh (selisih {selisih:.4f}).
+- **Silhouette Score** tertinggi ada di **K = {sil_best_k}** ({max(sil_scores):.5f}), namun K = {K} ({sil_scores[idx_K]:.5f}) tidak berbeda jauh (selisih {selisih:.5f}).
 - **K = {K}** dipilih karena menghasilkan {K} klaster yang dapat diinterpretasikan secara manajerial: {", ".join(NAMA_K)}.
         """)
 
@@ -695,14 +715,13 @@ with tab2:
 with tab3:
     st.subheader(f"Hasil K-Means Clustering (K={K})")
 
-    # Dua metrik: Silhouette Score & Elbow (Inertia)
     c1, c2 = st.columns(2)
-    c1.metric("Silhouette Score", f"{sil:.4f}", help="Mendekati 1 = sangat baik")
-    c2.metric("Elbow — Inertia (SSE)", f"{inertia_terpilih:,.2f}",
+    c1.metric("Silhouette Score", f"{sil:.5f}", help="Mendekati 1 = sangat baik")
+    c2.metric("Elbow — Inertia (SSE)", f"{inertia_terpilih:,.5f}",
               help="Jumlah kuadrat jarak tiap titik ke pusat klasternya; makin kecil makin kompak")
 
     st.subheader("Statistik Per Klaster (rata-rata, juta Rp)")
-    summary = df.groupby('klaster')[FEATURES].mean().round(1)
+    summary = df.groupby('klaster')[FEATURES].mean().round(5)
     summary.columns = ['Rata-rata Arus Kas', 'Rata-rata Pendapatan', 'Rata-rata Beban']
     summary = summary.reindex([n for n in NAMA_K if n in summary.index])
     st.dataframe(summary, use_container_width=True)
@@ -725,8 +744,8 @@ with tab3:
         r_else = df[df['tahun']!=2023]['arus_kas_operasi'].mean() / \
                  df[df['tahun']!=2023]['pendapatan_operasi'].mean() * 100
         c1, c2 = st.columns(2)
-        c1.metric("Rasio Arus Kas/Pendapatan 2023",    f"{r23:.2f}%")
-        c2.metric("Rasio Arus Kas/Pendapatan Non-2023", f"{r_else:.2f}%")
+        c1.metric("Rasio Arus Kas/Pendapatan 2023",    f"{r23:.5f}%")
+        c2.metric("Rasio Arus Kas/Pendapatan Non-2023", f"{r_else:.5f}%")
         if r23 < 2:
             st.warning("⚠️ Tahun 2023 menunjukkan anomali: pendapatan tertinggi namun arus kas operasi sangat rendah.")
 
