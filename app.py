@@ -139,45 +139,59 @@ st.markdown("""
         font-size: 0.92rem !important;
     }
 
-    /* FIX: Sidebar upload widget overlap */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
-        width: 100% !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div {
-        width: 100% !important;
-        overflow: hidden !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] label {
-        white-space: normal !important;
-        word-break: break-word !important;
-        font-size: 0.82rem !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] small {
-        font-size: 0.78rem !important;
-        display: block !important;
-        white-space: normal !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] span {
-        font-size: 0.82rem !important;
-        white-space: normal !important;
-        overflow-wrap: break-word !important;
-    }
-    /* Fix stacked text on Browse Files button */
+    /* ── FIX 1: Sidebar file uploader — hilangkan teks drag-drop yg overlap ── */
+    /* Sembunyikan teks "Drag and drop" / "upload" di dalam dropzone,
+       sisakan hanya tombol Browse */
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
-        padding: 12px 8px !important;
-        min-height: 70px !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div {
+        padding: 10px 8px 10px 8px !important;
+        min-height: 56px !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        gap: 6px !important;
+        justify-content: center !important;
     }
-    section[data-testid="stSidebar"] button[data-testid="stBaseButton-secondary"] {
-        font-size: 0.80rem !important;
-        padding: 4px 10px !important;
+    /* Sembunyikan semua teks langsung di dalam dropzone (drag-drop instruction) */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div > span,
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div > small {
+        display: none !important;
+    }
+    /* Tombol Browse: tampil penuh dan rapi */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
+        width: 100% !important;
+        font-size: 0.82rem !important;
+        padding: 6px 8px !important;
         white-space: nowrap !important;
-        min-width: 80px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    /* Info ukuran file (200MB • XLSX) tetap tampil di bawah */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"] {
+        display: none !important;
+    }
+
+    /* ── FIX 2: Expander icon (_arrow_) tidak overlap dengan teks judul ── */
+    /* Streamlit expander pakai pseudo-element / SVG yang kadang bertumpuk
+       saat font diganti; kita atur flex layout-nya agar rapi */
+    [data-testid="stExpander"] summary {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        line-height: 1.5 !important;
+        padding: 8px 4px !important;
+    }
+    [data-testid="stExpander"] summary p,
+    [data-testid="stExpander"] summary span {
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.5 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    /* Pastikan icon panah tidak bertumpuk */
+    [data-testid="stExpander"] summary svg {
+        flex-shrink: 0 !important;
+        min-width: 16px !important;
+        min-height: 16px !important;
     }
 </style>
 """, unsafe_allow_html=True)
