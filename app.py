@@ -85,16 +85,14 @@ st.markdown("""
 # ── CSS TAMBAHAN: FONT LEBIH RAPI & JARAK ANTAR SUB JUDUL ──────
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
     html, body, [class*="css"] {
-        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        font-family: 'Courier New', Courier, monospace;
     }
 
     h1, h2, h3 {
-        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        font-family: 'Courier New', Courier, monospace;
         letter-spacing: 0.3px;
-        font-weight: 600;
+        font-weight: 700;
     }
 
     /* Jarak & garis pemisah tipis antar sub judul agar tidak rapat */
