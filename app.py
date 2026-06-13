@@ -97,29 +97,29 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* Ukuran font disesuaikan agar tetap nyaman dibaca dengan Courier */
-    h1 { font-size: 1.7rem !important; }
-    h2 { font-size: 1.4rem !important; }
-    h3 { font-size: 1.15rem !important; }
+    /* Ukuran font disesuaikan agar nyaman dibaca */
+    h1 { font-size: 1.8rem !important; }
+    h2 { font-size: 1.45rem !important; }
+    h3 { font-size: 1.2rem !important; }
 
     p, span, label, div, .stMarkdown, .stCaption {
-        font-size: 0.92rem !important;
-        line-height: 1.55 !important;
+        font-size: 1.0rem !important;
+        line-height: 1.6 !important;
     }
 
     .stCaption, [data-testid="stCaptionContainer"] {
-        font-size: 0.8rem !important;
+        font-size: 0.88rem !important;
     }
 
     .stDataFrame, .stDataFrame * {
-        font-size: 0.85rem !important;
+        font-size: 0.92rem !important;
     }
 
     [data-testid="stMetricValue"] {
-        font-size: 1.3rem !important;
+        font-size: 1.4rem !important;
     }
     [data-testid="stMetricLabel"] {
-        font-size: 0.82rem !important;
+        font-size: 0.88rem !important;
     }
 
     /* Jarak & garis pemisah tipis antar sub judul agar tidak rapat */
@@ -139,14 +139,13 @@ st.markdown("""
     div[data-testid="stPills"] button {
         border-radius: 20px !important;
         font-weight: 700 !important;
-        font-size: 0.85rem !important;
+        font-size: 0.92rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ── CSS TAMBAHAN UNTUK HALAMAN LOGIN/LUPA PASSWORD/REGISTER ────
-# Kombinasi warna mengikuti identitas Pelindo Marine Service:
-# navy/biru tua (#0a3d62, #1a6fa8, #2980b9) dipadukan aksen oranye (#f5821f)
+# Warna: biru gradasi (#0a3d62, #1a6fa8, #2980b9) dan putih saja
 LOGIN_THEME_CSS = """
 <style>
     /* Latar belakang halaman login tetap putih */
@@ -159,7 +158,7 @@ LOGIN_THEME_CSS = """
         border-radius: 16px;
         padding: 28px 26px 20px 26px;
         box-shadow: 0 10px 32px rgba(10,61,98,0.25);
-        border-top: 5px solid #f5821f;
+        border-top: 5px solid #aed6f1;
     }
     /* Teks label di dalam form (Email/Password) jadi putih agar kontras */
     div[data-testid="stForm"] p,
@@ -174,27 +173,34 @@ LOGIN_THEME_CSS = """
         border-radius: 8px !important;
         border: none !important;
     }
+    /* Tombol submit utama (Masuk, Cari Password, Daftar): biru sedang */
     div[data-testid="stForm"] button[kind="primary"],
     .stButton button[kind="primary"] {
-        background-color: #f5821f !important;
-        border-color: #f5821f !important;
+        background-color: #1a6fa8 !important;
+        border-color: #1a6fa8 !important;
         color: #ffffff !important;
     }
     div[data-testid="stForm"] button[kind="primary"]:hover,
     .stButton button[kind="primary"]:hover {
-        background-color: #d96f15 !important;
-        border-color: #d96f15 !important;
+        background-color: #0a3d62 !important;
+        border-color: #0a3d62 !important;
     }
+    /* Tombol sekunder (Lupa Password, Buat Akun Baru, Kembali): putih bersih */
     .stButton button:not([kind="primary"]) {
-        border-color: #1a6fa8 !important;
+        border-color: #2980b9 !important;
         color: #0a3d62 !important;
         background-color: #ffffff !important;
     }
     .stButton button:not([kind="primary"]):hover {
         background-color: #eaf4fb !important;
+        border-color: #0a3d62 !important;
     }
     .login-title, h1, h2, h3 {
         color: #0a3d62 !important;
+    }
+    /* Subtitle oranye diganti biru muda */
+    div[style*="color:#f5821f"] {
+        color: #aed6f1 !important;
     }
 </style>
 """
@@ -213,7 +219,7 @@ def halaman_login():
         <div style='text-align:center; font-size:20px; font-weight:700; color:#0a3d62; margin-bottom:4px'>
             PT Pelindo Marine Service
         </div>
-        <div style='text-align:center; font-size:13px; color:#f5821f; font-weight:600; margin-bottom:28px'>
+        <div style='text-align:center; font-size:13px; color:#1a6fa8; font-weight:600; margin-bottom:28px'>
             Sistem Monitoring Arus Kas Operasional
         </div>
         """, unsafe_allow_html=True)
@@ -363,7 +369,7 @@ def tampilkan_footer():
 #  ROUTER
 # ══════════════════════════════════════════════════════════════
 if not st.session_state['logged_in']:
-    # Terapkan tema warna khusus (navy + oranye) untuk halaman login/lupa password/register
+    # Terapkan tema warna khusus (navy + putih) untuk halaman login/lupa password/register
     st.markdown(LOGIN_THEME_CSS, unsafe_allow_html=True)
     if st.session_state['page'] == 'forgot':
         halaman_lupa_password()
@@ -1140,21 +1146,37 @@ with tab4:
 with tab5:
     st.subheader("Export Hasil")
 
-    out_cols = ['tahun','bulan','arus_kas_operasi','pendapatan_operasi','beban_operasi','klaster']
-    out_df   = df[out_cols].copy()
-    st.dataframe(out_df, use_container_width=True)
-
-    buf = io.BytesIO()
-    with pd.ExcelWriter(buf, engine='openpyxl') as writer:
-        out_df.to_excel(writer, index=False, sheet_name='Hasil Clustering')
-    buf.seek(0)
-
-    st.download_button(
-        label="⬇️ Download hasil_clustering.xlsx",
-        data=buf,
-        file_name="hasil_clustering.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    # ── FILTER TAHUN UNTUK EXPORT ────────────────────────────────
+    st.markdown("**Filter Tahun**")
+    tahun_options_export = sorted(df['tahun'].unique().tolist())
+    tahun_pilihan_export = filter_tahun_pills(
+        "Pilih tahun yang ingin di-export",
+        options=tahun_options_export,
+        default=tahun_options_export,
+        key="filter_tahun_export"
     )
+
+    out_cols = ['tahun','bulan','arus_kas_operasi','pendapatan_operasi','beban_operasi','klaster']
+
+    if not tahun_pilihan_export:
+        st.warning("⚠️ Pilih minimal satu tahun untuk melakukan export.")
+    else:
+        out_df = df[df['tahun'].isin(tahun_pilihan_export)][out_cols].copy()
+
+        st.caption(f"Menampilkan **{len(out_df)} baris** dari tahun yang dipilih: {', '.join(str(t) for t in sorted(tahun_pilihan_export))}")
+        st.dataframe(out_df, use_container_width=True)
+
+        buf = io.BytesIO()
+        with pd.ExcelWriter(buf, engine='openpyxl') as writer:
+            out_df.to_excel(writer, index=False, sheet_name='Hasil Clustering')
+        buf.seek(0)
+
+        st.download_button(
+            label="⬇️ Download hasil_clustering.xlsx",
+            data=buf,
+            file_name="hasil_clustering.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 
 # ═══════════════════════════════════════════════════════════════
