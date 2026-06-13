@@ -138,41 +138,63 @@ st.markdown("""
         font-weight: 600 !important;
         font-size: 0.92rem !important;
     }
-    </style>
+
+    /* ── FIX 1: Sidebar file uploader — hilangkan teks drag-drop yg overlap ── */
+    /* Sembunyikan teks "Drag and drop" / "upload" di dalam dropzone,
+       sisakan hanya tombol Browse */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
+        padding: 10px 8px 10px 8px !important;
+        min-height: 56px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    /* Sembunyikan semua teks langsung di dalam dropzone (drag-drop instruction) */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div > span,
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div > small {
+        display: none !important;
+    }
+    /* Tombol Browse: tampil penuh dan rapi */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
+        width: 100% !important;
+        font-size: 0.82rem !important;
+        padding: 6px 8px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    /* Info ukuran file (200MB • XLSX) tetap tampil di bawah */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"] {
+        display: none !important;
+    }
+
+    /* ── FIX 2: Expander icon (_arrow_) tidak overlap dengan teks judul ── */
+    /* Streamlit expander pakai pseudo-element / SVG yang kadang bertumpuk
+       saat font diganti; kita atur flex layout-nya agar rapi */
+    [data-testid="stExpander"] summary {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        line-height: 1.5 !important;
+        padding: 8px 4px !important;
+    }
+    [data-testid="stExpander"] summary p,
+    [data-testid="stExpander"] summary span {
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.5 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    /* Pastikan icon panah tidak bertumpuk */
+    [data-testid="stExpander"] summary svg {
+        flex-shrink: 0 !important;
+        min-width: 16px !important;
+        min-height: 16px !important;
+    }
+</style>
 """, unsafe_allow_html=True)
-
-# ── SIDEBAR ───────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("""
-    <div style='background:linear-gradient(160deg,#0a3d62,#1a6fa8);
-                border-radius:10px; padding:20px 16px; margin-bottom:4px; text-align:center'>
-        <div style='font-size:36px; margin-bottom:8px'>🚢</div>
-        <div style='font-size:11px; color:#aed6f1; letter-spacing:2px; font-weight:700; margin-bottom:4px'>
-            PT PELINDO MARINE SERVICE
-        </div>
-        <div style='width:40px; height:2px; background:#aed6f1; margin:8px auto'></div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.divider()
-
-    st.header("⚙️ Konfigurasi")
-    uploaded_file = st.file_uploader("Upload file Excel (.xlsx)", type=["xlsx"])
-    sheet_name    = st.text_input("Nama sheet", value="bulanan")
-    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=4)
-
-    st.divider()
-    st.markdown("**Preview Klaster**")
-    COLORS = get_colors(K)
-    NAMA_K = get_nama_klaster(K)
-    for nm in NAMA_K:
-        warna = COLORS[nm]
-        st.markdown(
-            f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
-            f'<div style="width:14px;height:14px;border-radius:3px;background:{warna}"></div>'
-            f'<span style="font-size:13px">{nm}</span></div>',
-            unsafe_allow_html=True
-        )
-    st.divider()
 
 # ── CSS TAMBAHAN UNTUK HALAMAN LOGIN/LUPA PASSWORD/REGISTER ────
 LOGIN_THEME_CSS = """
@@ -1018,9 +1040,10 @@ with tab2:
         idx_K   = list(K_range).index(K) if K in K_range else 0
         sil_K_val = sil_scores[idx_K]
         sil_best_val = max(sil_scores)
+        # REVISI POIN 1: kalimat interpretasi diubah sesuai permintaan
         st.markdown(f"""
 - **Elbow Method** menunjukkan siku paling jelas pada **K = {elbow_k}** (inertia mulai landai di titik ini).
-- Nilai Silhouette Score tertinggi diperoleh pada **K = {sil_best_k}** sebesar **{sil_best_val:.5f}**, sehingga jumlah klaster tersebut dipilih karena memberikan kualitas pengelompokan yang paling optimal.
+- Nilai **Silhouette Score** tertinggi diperoleh pada **K = {sil_best_k}** sebesar **{sil_best_val:.5f}**, sehingga jumlah klaster tersebut dipilih karena memberikan kualitas pengelompokan yang paling optimal.
 - **K = {K}** menghasilkan {K} klaster yang dapat diinterpretasikan secara manajerial: {", ".join(NAMA_K)}.
         """)
 
@@ -1078,14 +1101,18 @@ with tab3:
     else:
         st.info("Tidak ada data.")
 
+    # REVISI POIN 3: Analisis Anomali 2023 hanya muncul saat filter = [2023] saja
+    # atau saat semua tahun dipilih (tidak ada filter spesifik lain)
     semua_tahun = sorted(df['tahun'].unique().tolist())
     tahun_pilihan_sorted = sorted(tahun_pilihan) if tahun_pilihan else []
 
     tampilkan_anomali = False
     if 2023 in df['tahun'].values:
         if tahun_pilihan_sorted == [2023]:
+            # Hanya tahun 2023 yang dipilih
             tampilkan_anomali = True
         elif tahun_pilihan_sorted == semua_tahun:
+            # Semua tahun dipilih
             tampilkan_anomali = True
 
     if tampilkan_anomali:
