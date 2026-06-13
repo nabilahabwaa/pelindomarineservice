@@ -139,73 +139,53 @@ st.markdown("""
         font-size: 0.92rem !important;
     }
 
-    /* ── FIX FILE UPLOADER SIDEBAR ── */
-    /* Reset semua style dropzone dulu */
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
-        display: block !important;
-        padding: 8px !important;
-        min-height: unset !important;
-        overflow: hidden !important;
-    }
-    /* Sembunyikan div instruksi drag-drop (anak pertama) */
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div:first-child {
-        display: none !important;
-    }
-    /* Pastikan hanya tombol Browse yang muncul, tanpa teks double */
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
-        display: block !important;
-        width: 100% !important;
-        font-size: 0.82rem !important;
-        padding: 6px 10px !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        position: static !important;
-    }
-    /* Tampilkan info ukuran file "200MB • XLSX" */
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"] {
-        display: block !important;
-        text-align: center !important;
-        font-size: 0.75rem !important;
-        color: #888 !important;
-        margin-top: 4px !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"] span {
-        font-size: 0.75rem !important;
-    }
+/* ===== FIX FILE UPLOADER SIDEBAR ===== */
 
-    /* ── FIX EXPANDER: icon tidak overlap teks judul ── */
-    [data-testid="stExpander"] details summary {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: flex-start !important;
-        gap: 10px !important;
-        padding: 10px 6px !important;
-        cursor: pointer !important;
-        line-height: 1.5 !important;
-        overflow: visible !important;
-    }
-    /* Panah / chevron icon */
-    [data-testid="stExpander"] details summary svg {
-        flex: 0 0 18px !important;
-        width: 18px !important;
-        height: 18px !important;
-        margin-top: 2px !important;
-        position: static !important;
-    }
-    /* Teks judul expander */
-    [data-testid="stExpander"] details summary p,
-    [data-testid="stExpander"] details summary span,
-    [data-testid="stExpander"] details summary div {
-        flex: 1 1 auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1.5 !important;
-        white-space: normal !important;
-        word-break: break-word !important;
-        overflow: visible !important;
-        position: static !important;
-    }
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+    width: 100% !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
+    min-height: 60px !important;
+    padding: 8px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* sembunyikan semua teks bawaan uploader */
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] p,
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] span,
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] small {
+    display: none !important;
+}
+
+/* tampilkan tombol browse dengan normal */
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
+    display: block !important;
+    width: 100% !important;
+    min-height: 36px !important;
+    font-size: 13px !important;
+}
+
+/* ===== FIX EXPANDER ===== */
+
+details[data-testid="stExpander"] summary {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    line-height: 1.5 !important;
+}
+
+details[data-testid="stExpander"] summary p {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+details[data-testid="stExpander"] summary svg {
+    flex-shrink: 0 !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
