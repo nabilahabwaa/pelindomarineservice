@@ -82,18 +82,20 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── CSS TAMBAHAN: FONT COURIER & JARAK ANTAR SUB JUDUL ─────────
+# ── CSS TAMBAHAN: FONT INTER (PROFESIONAL) & JARAK ANTAR SUB JUDUL ─────────
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
     html, body, [class*="css"], .stApp, .stMarkdown, p, span, div,
     .stDataFrame, .stMetric, .stButton button, .stTextInput input,
     .stSelectbox, .stNumberInput input, .stCaption, .stTabs {
-        font-family: 'Courier New', Courier, monospace !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
     h1, h2, h3, h4 {
-        font-family: 'Courier New', Courier, monospace !important;
-        letter-spacing: 0.5px;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        letter-spacing: -0.3px;
         font-weight: 700;
     }
 
@@ -117,6 +119,7 @@ st.markdown("""
 
     [data-testid="stMetricValue"] {
         font-size: 1.4rem !important;
+        font-weight: 700 !important;
     }
     [data-testid="stMetricLabel"] {
         font-size: 0.88rem !important;
@@ -138,69 +141,95 @@ st.markdown("""
     /* Tampilan tombol filter tahun (pills) */
     div[data-testid="stPills"] button {
         border-radius: 20px !important;
-        font-weight: 700 !important;
+        font-weight: 600 !important;
         font-size: 0.92rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ── CSS TAMBAHAN UNTUK HALAMAN LOGIN/LUPA PASSWORD/REGISTER ────
-# Warna: biru gradasi (#0a3d62, #1a6fa8, #2980b9) dan putih saja
+# Desain: background putih bersih, kotak form biru solid profesional
 LOGIN_THEME_CSS = """
 <style>
-    /* Latar belakang halaman login tetap putih */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    /* Background halaman: putih bersih */
     .stApp {
-        background: #ffffff;
+        background: #f0f4f8 !important;
     }
-    /* Kotak form "Masuk" diberi gradasi biru */
+
+    /* Kotak form: biru solid dengan shadow elegan */
     div[data-testid="stForm"] {
-        background: linear-gradient(135deg, #0a3d62 0%, #1a6fa8 55%, #2980b9 100%);
-        border-radius: 16px;
-        padding: 28px 26px 20px 26px;
-        box-shadow: 0 10px 32px rgba(10,61,98,0.25);
-        border-top: 5px solid #aed6f1;
+        background: #0a3d62 !important;
+        border-radius: 20px !important;
+        padding: 32px 28px 24px 28px !important;
+        box-shadow: 0 20px 60px rgba(10,61,98,0.30), 0 4px 16px rgba(10,61,98,0.15) !important;
+        border: none !important;
+        border-left: 6px solid #2980b9 !important;
     }
-    /* Teks label di dalam form (Email/Password) jadi putih agar kontras */
+
+    /* Label teks di dalam form: putih */
     div[data-testid="stForm"] p,
     div[data-testid="stForm"] label,
-    div[data-testid="stForm"] strong {
-        color: #ffffff !important;
+    div[data-testid="stForm"] strong,
+    div[data-testid="stForm"] span {
+        color: #e8f4fd !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
     }
-    /* Kotak input tetap putih supaya teks isian mudah dibaca */
+
+    /* Input field: putih dengan border biru muda saat fokus */
     div[data-testid="stForm"] input {
         background-color: #ffffff !important;
         color: #1a252f !important;
-        border-radius: 8px !important;
-        border: none !important;
+        border-radius: 10px !important;
+        border: 1.5px solid #aed6f1 !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.95rem !important;
+        padding: 10px 14px !important;
     }
-    /* Tombol submit utama (Masuk, Cari Password, Daftar): biru sedang */
+    div[data-testid="stForm"] input:focus {
+        border-color: #2980b9 !important;
+        box-shadow: 0 0 0 3px rgba(41,128,185,0.15) !important;
+    }
+
+    /* Tombol utama (Masuk / Daftar / Cari Password): biru terang */
     div[data-testid="stForm"] button[kind="primary"],
     .stButton button[kind="primary"] {
-        background-color: #1a6fa8 !important;
-        border-color: #1a6fa8 !important;
+        background-color: #2980b9 !important;
+        border-color: #2980b9 !important;
         color: #ffffff !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        font-family: 'Inter', sans-serif !important;
+        letter-spacing: 0.3px !important;
+        padding: 10px 0 !important;
+        transition: background 0.2s !important;
     }
     div[data-testid="stForm"] button[kind="primary"]:hover,
     .stButton button[kind="primary"]:hover {
-        background-color: #0a3d62 !important;
-        border-color: #0a3d62 !important;
+        background-color: #1a6fa8 !important;
+        border-color: #1a6fa8 !important;
     }
-    /* Tombol sekunder (Lupa Password, Buat Akun Baru, Kembali): putih bersih */
+
+    /* Tombol sekunder (Lupa Password, Buat Akun Baru, Kembali): putih */
     .stButton button:not([kind="primary"]) {
-        border-color: #2980b9 !important;
+        border: 1.5px solid #2980b9 !important;
         color: #0a3d62 !important;
         background-color: #ffffff !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-family: 'Inter', sans-serif !important;
     }
     .stButton button:not([kind="primary"]):hover {
         background-color: #eaf4fb !important;
-        border-color: #0a3d62 !important;
+        border-color: #1a6fa8 !important;
     }
+
     .login-title, h1, h2, h3 {
         color: #0a3d62 !important;
-    }
-    /* Subtitle oranye diganti biru muda */
-    div[style*="color:#f5821f"] {
-        color: #aed6f1 !important;
+        font-family: 'Inter', sans-serif !important;
     }
 </style>
 """
