@@ -51,7 +51,7 @@ st.markdown("""
     .login-title {
         font-size: 22px;
         font-weight: 700;
-        color: #1a252f;
+        color: #0a3d62;
         margin-bottom: 4px;
     }
     .login-sub {
@@ -82,6 +82,46 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── CSS TAMBAHAN UNTUK HALAMAN LOGIN/LUPA PASSWORD/REGISTER ────
+# Kombinasi warna mengikuti identitas Pelindo Marine Service:
+# navy/biru tua (#0a3d62, #1a6fa8, #2980b9) dipadukan aksen oranye (#f5821f)
+LOGIN_THEME_CSS = """
+<style>
+    .stApp {
+        background: linear-gradient(135deg, #0a3d62 0%, #1a6fa8 55%, #2980b9 100%);
+    }
+    div[data-testid="stForm"] {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px 26px 18px 26px;
+        box-shadow: 0 10px 32px rgba(0,0,0,0.28);
+        border-top: 5px solid #f5821f;
+    }
+    div[data-testid="stForm"] button[kind="primary"],
+    .stButton button[kind="primary"] {
+        background-color: #f5821f !important;
+        border-color: #f5821f !important;
+        color: #ffffff !important;
+    }
+    div[data-testid="stForm"] button[kind="primary"]:hover,
+    .stButton button[kind="primary"]:hover {
+        background-color: #d96f15 !important;
+        border-color: #d96f15 !important;
+    }
+    .stButton button:not([kind="primary"]) {
+        border-color: #1a6fa8 !important;
+        color: #0a3d62 !important;
+        background-color: #ffffff !important;
+    }
+    .stButton button:not([kind="primary"]):hover {
+        background-color: #eaf4fb !important;
+    }
+    .login-title, h1, h2, h3 {
+        color: #0a3d62 !important;
+    }
+</style>
+"""
+
 
 # ══════════════════════════════════════════════════════════════
 #  HALAMAN LOGIN
@@ -93,10 +133,10 @@ def halaman_login():
         <div style='text-align:center; margin-bottom: 8px'>
             <span style='font-size:40px'>🚢</span>
         </div>
-        <div style='text-align:center; font-size:20px; font-weight:700; color:#1a252f; margin-bottom:4px'>
+        <div style='text-align:center; font-size:20px; font-weight:700; color:#0a3d62; margin-bottom:4px'>
             PT Pelindo Marine Service
         </div>
-        <div style='text-align:center; font-size:13px; color:#7f8c8d; margin-bottom:28px'>
+        <div style='text-align:center; font-size:13px; color:#f5821f; font-weight:600; margin-bottom:28px'>
             Sistem Monitoring Arus Kas Operasional
         </div>
         """, unsafe_allow_html=True)
@@ -142,7 +182,7 @@ def halaman_lupa_password():
     with col_m:
         st.markdown("""
         <div style='text-align:center; font-size:36px; margin-bottom:8px'>🔑</div>
-        <div style='text-align:center; font-size:20px; font-weight:700; color:#1a252f; margin-bottom:4px'>
+        <div style='text-align:center; font-size:20px; font-weight:700; color:#0a3d62; margin-bottom:4px'>
             Lupa Password
         </div>
         <div style='text-align:center; font-size:13px; color:#7f8c8d; margin-bottom:24px'>
@@ -167,7 +207,7 @@ def halaman_lupa_password():
                 st.markdown(f"""
                 <div style='background:#eaf4fb; border:1.5px solid #2980b9; border-radius:8px;
                             padding:14px 18px; font-size:20px; font-weight:700;
-                            color:#1a252f; text-align:center; letter-spacing:2px; margin-top:8px'>
+                            color:#0a3d62; text-align:center; letter-spacing:2px; margin-top:8px'>
                     {pw}
                 </div>
                 """, unsafe_allow_html=True)
@@ -187,7 +227,7 @@ def halaman_register():
     with col_m:
         st.markdown("""
         <div style='text-align:center; font-size:36px; margin-bottom:8px'>📝</div>
-        <div style='text-align:center; font-size:20px; font-weight:700; color:#1a252f; margin-bottom:4px'>
+        <div style='text-align:center; font-size:20px; font-weight:700; color:#0a3d62; margin-bottom:4px'>
             Buat Akun Baru
         </div>
         <div style='text-align:center; font-size:13px; color:#7f8c8d; margin-bottom:24px'>
@@ -230,15 +270,31 @@ def halaman_register():
 
 
 # ══════════════════════════════════════════════════════════════
+#  FOOTER (ditambahkan untuk seluruh halaman dashboard)
+# ══════════════════════════════════════════════════════════════
+def tampilkan_footer():
+    st.markdown("---")
+    st.markdown(
+        "<div style='text-align:center; color:#7f8c8d; font-size:12px; padding:6px 0 18px 0'>"
+        "Praktik Kerja Lapangan 2026 - Universitas Airlangga"
+        "</div>",
+        unsafe_allow_html=True
+    )
+
+
+# ══════════════════════════════════════════════════════════════
 #  ROUTER
 # ══════════════════════════════════════════════════════════════
 if not st.session_state['logged_in']:
+    # Terapkan tema warna khusus (navy + oranye) untuk halaman login/lupa password/register
+    st.markdown(LOGIN_THEME_CSS, unsafe_allow_html=True)
     if st.session_state['page'] == 'forgot':
         halaman_lupa_password()
     elif st.session_state['page'] == 'register':
         halaman_register()
     else:
         halaman_login()
+    tampilkan_footer()
     st.stop()
 
 BULAN_ORDER = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
@@ -339,6 +395,63 @@ def run_clustering(df, k):
     sil     = silhouette_score(X_scaled, km.labels_)
     inertia = km.inertia_
     return df, X_scaled, sil, inertia
+
+
+# ══════════════════════════════════════════════════════════════
+#  HELPER: NARASI ANALISIS HASIL CLUSTERING
+# ══════════════════════════════════════════════════════════════
+def generate_analysis_text(df_view, summary_view, sil, aktif_view):
+    teks = []
+
+    if sil >= 0.5:
+        kualitas = "**baik** — klaster terbentuk dengan pemisahan yang cukup jelas antar kelompok"
+    elif sil >= 0.25:
+        kualitas = "**cukup baik**, meskipun terdapat sedikit tumpang tindih antar klaster"
+    else:
+        kualitas = "**kurang optimal** — klaster cenderung tumpang tindih sehingga interpretasi perlu dilakukan dengan kehati-hatian"
+
+    teks.append(f"Nilai **Silhouette Score = {sil:.5f}** menunjukkan kualitas pengelompokan tergolong {kualitas}.")
+    teks.append("")
+
+    teks.append("**Karakteristik tiap klaster (berdasarkan tahun yang dipilih):**")
+    for kl in aktif_view:
+        if kl not in summary_view.index:
+            continue
+        row   = summary_view.loc[kl]
+        sub   = df_view[df_view['klaster'] == kl]
+        jumlah = len(sub)
+        persen = jumlah / len(df_view) * 100 if len(df_view) > 0 else 0
+        tahun_count = sub['tahun'].value_counts()
+        tahun_top   = ", ".join(str(t) for t in tahun_count.index[:3])
+        teks.append(
+            f"- **{kl}**: {jumlah} bulan ({persen:.1f}% dari data terpilih). "
+            f"Rata-rata arus kas operasi **Rp {row['Rata-rata Arus Kas']:,.2f} juta**, "
+            f"pendapatan operasi **Rp {row['Rata-rata Pendapatan']:,.2f} juta**, "
+            f"beban operasi **Rp {row['Rata-rata Beban']:,.2f} juta**. "
+            f"Paling banyak terjadi pada tahun {tahun_top}."
+        )
+
+    teks.append("")
+    teks.append("**Klaster dominan per tahun (pada rentang tahun yang dipilih):**")
+    for yr in sorted(df_view['tahun'].unique()):
+        dom = df_view[df_view['tahun'] == yr]['klaster'].value_counts().idxmax()
+        teks.append(f"- Tahun {yr}: didominasi oleh klaster **{dom}**")
+
+    if 'Performa Rendah' in summary_view.index and 'Performa Tinggi' in summary_view.index:
+        tinggi = summary_view.loc['Performa Tinggi']
+        rendah = summary_view.loc['Performa Rendah']
+        teks.append("")
+        teks.append(
+            f"**Catatan manajerial:** Selisih rata-rata arus kas operasi antara klaster *Performa Tinggi* "
+            f"(Rp {tinggi['Rata-rata Arus Kas']:,.2f} juta) dan *Performa Rendah* "
+            f"(Rp {rendah['Rata-rata Arus Kas']:,.2f} juta) cukup signifikan. "
+            f"Bulan-bulan yang masuk klaster *Performa Rendah* sebaiknya dievaluasi lebih lanjut, "
+            f"khususnya proporsi beban operasi terhadap pendapatan operasi pada periode tersebut, "
+            f"agar dapat diidentifikasi penyebab rendahnya arus kas dan langkah perbaikan yang diperlukan."
+        )
+
+    return "\n".join(teks)
+
 
 # ── SIDEBAR ───────────────────────────────────────────────────
 with st.sidebar:
@@ -526,6 +639,7 @@ if not data_loaded:
                 st.session_state['current_user'] = ""
                 st.session_state['page']         = "login"
                 st.rerun()
+    tampilkan_footer()
     st.stop()
 
 # ── Load data ─────────────────────────────────────────────────
@@ -546,6 +660,7 @@ else:
         
         💡 Download template di tab **Input Manual → Download Template Excel** sebagai referensi format.
         """)
+        tampilkan_footer()
         st.stop()
 
 df, X_scaled, sil, inertia_terpilih = run_clustering(df_raw, K)
@@ -595,6 +710,23 @@ with tab1:
             st.caption("→ Semua variabel berdistribusi normal → normalisasi Z-Score tetap digunakan sebelum clustering untuk menyamakan skala.")
         else:
             st.caption("→ Data tidak berdistribusi normal → normalisasi Z-Score tepat digunakan sebelum clustering.")
+
+    # ── TAMBAHAN 1: HASIL NORMALISASI Z-SCORE ────────────────────
+    st.subheader("Hasil Normalisasi Z-Score")
+    st.caption(
+        "Z-Score = (X − rata-rata) / standar deviasi. "
+        "Nilai 0 berarti sama dengan rata-rata, nilai positif berarti di atas rata-rata, "
+        "dan nilai negatif berarti di bawah rata-rata. Data inilah yang digunakan sebagai "
+        "input proses K-Means Clustering."
+    )
+    df_zscore = pd.DataFrame(
+        X_scaled,
+        columns=[f"{f}_zscore" for f in FEATURES],
+        index=df.index
+    ).round(5)
+    df_zscore.insert(0, 'bulan', df['bulan'].values)
+    df_zscore.insert(0, 'tahun', df['tahun'].values)
+    st.dataframe(df_zscore, use_container_width=True, height=300)
 
     st.subheader("Rasio Arus Kas / Pendapatan per Tahun (%)")
     rasio = df.groupby('tahun').apply(
@@ -720,22 +852,50 @@ with tab3:
     c2.metric("Elbow — Inertia (SSE)", f"{inertia_terpilih:,.5f}",
               help="Jumlah kuadrat jarak tiap titik ke pusat klasternya; makin kecil makin kompak")
 
+    # ── TAMBAHAN 2: FILTER TAHUN UNTUK MELIHAT HASIL CLUSTERING ──
+    st.subheader("🗂️ Filter Tahun")
+    tahun_options = sorted(df['tahun'].unique().tolist())
+    tahun_pilihan = st.multiselect(
+        "Pilih tahun yang ingin ditampilkan pada hasil clustering di bawah ini",
+        options=tahun_options,
+        default=tahun_options,
+        key="filter_tahun_clustering"
+    )
+
+    if len(tahun_pilihan) == 0:
+        st.warning("⚠️ Pilih minimal satu tahun untuk menampilkan hasil clustering.")
+        df_view = df.iloc[0:0].copy()
+    else:
+        df_view = df[df['tahun'].isin(tahun_pilihan)].copy()
+
+    aktif_view = [n for n in NAMA_K if n in df_view['klaster'].values] if len(df_view) > 0 else []
+
     st.subheader("Statistik Per Klaster (rata-rata, juta Rp)")
-    summary = df.groupby('klaster')[FEATURES].mean().round(5)
-    summary.columns = ['Rata-rata Arus Kas', 'Rata-rata Pendapatan', 'Rata-rata Beban']
-    summary = summary.reindex([n for n in NAMA_K if n in summary.index])
-    st.dataframe(summary, use_container_width=True)
+    if len(df_view) > 0:
+        summary_view = df_view.groupby('klaster')[FEATURES].mean().round(5)
+        summary_view.columns = ['Rata-rata Arus Kas', 'Rata-rata Pendapatan', 'Rata-rata Beban']
+        summary_view = summary_view.reindex([n for n in NAMA_K if n in summary_view.index])
+        st.dataframe(summary_view, use_container_width=True)
+    else:
+        summary_view = pd.DataFrame(columns=['Rata-rata Arus Kas', 'Rata-rata Pendapatan', 'Rata-rata Beban'])
+        st.info("Tidak ada data untuk tahun yang dipilih.")
 
     ca, cb = st.columns(2)
     with ca:
         st.subheader("Jumlah Bulan Per Klaster")
-        cnt = df['klaster'].value_counts().reindex(aktif).rename('Jumlah Bulan').to_frame()
-        st.dataframe(cnt, use_container_width=True)
+        if len(df_view) > 0:
+            cnt = df_view['klaster'].value_counts().reindex(aktif_view).rename('Jumlah Bulan').to_frame()
+            st.dataframe(cnt, use_container_width=True)
+        else:
+            st.info("Tidak ada data.")
     with cb:
         st.subheader("Distribusi Klaster per Tahun")
-        cross = df.groupby(['tahun','klaster']).size().unstack(fill_value=0)
-        cross = cross.reindex(columns=[n for n in NAMA_K if n in cross.columns])
-        st.dataframe(cross, use_container_width=True)
+        if len(df_view) > 0:
+            cross_view = df_view.groupby(['tahun','klaster']).size().unstack(fill_value=0)
+            cross_view = cross_view.reindex(columns=[n for n in NAMA_K if n in cross_view.columns])
+            st.dataframe(cross_view, use_container_width=True)
+        else:
+            st.info("Tidak ada data.")
 
     if 2023 in df['tahun'].values:
         st.subheader("Analisis Anomali 2023")
@@ -750,8 +910,15 @@ with tab3:
             st.warning("⚠️ Tahun 2023 menunjukkan anomali: pendapatan tertinggi namun arus kas operasi sangat rendah.")
 
     st.subheader("Data Hasil Clustering")
-    st.dataframe(df[['tahun','bulan','arus_kas_operasi','pendapatan_operasi',
+    st.dataframe(df_view[['tahun','bulan','arus_kas_operasi','pendapatan_operasi',
                       'beban_operasi','klaster']], use_container_width=True, height=350)
+
+    # ── TAMBAHAN 3: ANALISIS HASIL CLUSTERING ────────────────────
+    st.subheader("📊 Analisis Hasil Clustering")
+    if len(df_view) > 0:
+        st.markdown(generate_analysis_text(df_view, summary_view, sil, aktif_view))
+    else:
+        st.info("Tidak ada data untuk dianalisis pada tahun yang dipilih.")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -895,3 +1062,6 @@ with tab_logout:
             st.session_state['current_user'] = ''
             st.session_state['page']         = 'login'
             st.rerun()
+
+# ── TAMBAHAN 4: FOOTER DASHBOARD ──────────────────────────────
+tampilkan_footer()
