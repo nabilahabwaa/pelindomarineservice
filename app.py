@@ -138,6 +138,8 @@ st.markdown("""
         font-weight: 600 !important;
         font-size: 0.92rem !important;
     }
+    </style>
+""", unsafe_allow_html=True)
 
 # ── SIDEBAR ───────────────────────────────────────────────────
 with st.sidebar:
