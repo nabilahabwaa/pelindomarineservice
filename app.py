@@ -82,20 +82,71 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── CSS TAMBAHAN: FONT LEBIH RAPI & JARAK ANTAR SUB JUDUL ──────
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+    }
+
+    h1, h2, h3 {
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        letter-spacing: 0.3px;
+        font-weight: 600;
+    }
+
+    /* Jarak & garis pemisah tipis antar sub judul agar tidak rapat */
+    div[data-testid="stVerticalBlock"] h3 {
+        margin-top: 2rem;
+        margin-bottom: 0.9rem;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #eef2f7;
+    }
+
+    /* Sub judul pertama dalam sebuah tab tidak perlu jarak atas yang besar */
+    div[data-testid="stTabContent"] > div > div[data-testid="stVerticalBlock"] > div:first-child h3 {
+        margin-top: 0.4rem;
+    }
+
+    /* Tampilan tombol filter tahun (pills) */
+    div[data-testid="stPills"] button {
+        border-radius: 20px !important;
+        font-weight: 500 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # ── CSS TAMBAHAN UNTUK HALAMAN LOGIN/LUPA PASSWORD/REGISTER ────
 # Kombinasi warna mengikuti identitas Pelindo Marine Service:
 # navy/biru tua (#0a3d62, #1a6fa8, #2980b9) dipadukan aksen oranye (#f5821f)
 LOGIN_THEME_CSS = """
 <style>
+    /* Latar belakang halaman login tetap putih */
     .stApp {
-        background: linear-gradient(135deg, #0a3d62 0%, #1a6fa8 55%, #2980b9 100%);
-    }
-    div[data-testid="stForm"] {
         background: #ffffff;
+    }
+    /* Kotak form "Masuk" diberi gradasi biru */
+    div[data-testid="stForm"] {
+        background: linear-gradient(135deg, #0a3d62 0%, #1a6fa8 55%, #2980b9 100%);
         border-radius: 16px;
-        padding: 28px 26px 18px 26px;
-        box-shadow: 0 10px 32px rgba(0,0,0,0.28);
+        padding: 28px 26px 20px 26px;
+        box-shadow: 0 10px 32px rgba(10,61,98,0.25);
         border-top: 5px solid #f5821f;
+    }
+    /* Teks label di dalam form (Email/Password) jadi putih agar kontras */
+    div[data-testid="stForm"] p,
+    div[data-testid="stForm"] label,
+    div[data-testid="stForm"] strong {
+        color: #ffffff !important;
+    }
+    /* Kotak input tetap putih supaya teks isian mudah dibaca */
+    div[data-testid="stForm"] input {
+        background-color: #ffffff !important;
+        color: #1a252f !important;
+        border-radius: 8px !important;
+        border: none !important;
     }
     div[data-testid="stForm"] button[kind="primary"],
     .stButton button[kind="primary"] {
@@ -453,6 +504,24 @@ def generate_analysis_text(df_view, summary_view, sil, aktif_view):
     return "\n".join(teks)
 
 
+# ══════════════════════════════════════════════════════════════
+#  HELPER: FILTER TAHUN BERGAYA TOMBOL (PILLS) DENGAN FALLBACK
+# ══════════════════════════════════════════════════════════════
+def filter_tahun_pills(label, options, default, key):
+    """Filter tahun ala tombol klik (st.pills). Jika versi Streamlit
+    belum mendukung st.pills, otomatis jatuh ke st.multiselect."""
+    if hasattr(st, "pills"):
+        return st.pills(
+            label,
+            options=options,
+            default=default,
+            selection_mode="multi",
+            key=key
+        )
+    else:
+        return st.multiselect(label, options=options, default=default, key=key)
+
+
 # ── SIDEBAR ───────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
@@ -677,66 +746,88 @@ with tab1:
         st.info("📋 Menggunakan **data manual** yang diinput di tab Input Manual.")
     st.subheader("Ringkasan Data")
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total Observasi",  f"{len(df)} bulan")
-    c2.metric("Periode",          f"{df['tahun'].min()} – {df['tahun'].max()}")
-    c3.metric("Missing Values",   int(df[FEATURES].isnull().sum().sum()))
-    c4.metric("Jumlah Tahun",     df['tahun'].nunique())
+    # ── FILTER TAHUN (klik/pencet) ───────────────────────────────
+    st.markdown("**Filter Tahun**")
+    tahun_options_t1 = sorted(df['tahun'].unique().tolist())
+    tahun_pilihan_t1 = filter_tahun_pills(
+        "Pilih tahun yang ingin ditampilkan",
+        options=tahun_options_t1,
+        default=tahun_options_t1,
+        key="filter_tahun_ringkasan"
+    )
 
-    st.subheader("Statistik Deskriptif (juta Rp)")
-    desc = df[FEATURES].describe().round(5)
-    desc.index = ['Jumlah','Rata-rata','Std Dev','Min','Q1','Median','Q3','Maks']
-    st.dataframe(desc, use_container_width=True)
+    if not tahun_pilihan_t1:
+        st.warning("⚠️ Pilih minimal satu tahun untuk menampilkan ringkasan data.")
+        df_t1 = df.iloc[0:0].copy()
+    else:
+        df_t1 = df[df['tahun'].isin(tahun_pilihan_t1)].copy()
 
-    ca, cb = st.columns(2)
-    with ca:
+    if len(df_t1) == 0:
+        st.info("Tidak ada data untuk tahun yang dipilih.")
+    else:
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Total Observasi",  f"{len(df_t1)} bulan")
+        c2.metric("Periode",          f"{df_t1['tahun'].min()} – {df_t1['tahun'].max()}")
+        c3.metric("Missing Values",   int(df_t1[FEATURES].isnull().sum().sum()))
+        c4.metric("Jumlah Tahun",     df_t1['tahun'].nunique())
+
+        st.subheader("Statistik Deskriptif (juta Rp)")
+        desc = df_t1[FEATURES].describe().round(5)
+        desc.index = ['Jumlah','Rata-rata','Std Dev','Min','Q1','Median','Q3','Maks']
+        st.dataframe(desc, use_container_width=True)
+
         st.subheader("Koefisien Variasi (%)")
-        cv = {f: round((df[f].std()/df[f].mean())*100, 5) for f in FEATURES}
+        cv = {f: round((df_t1[f].std()/df_t1[f].mean())*100, 5) for f in FEATURES}
         st.dataframe(pd.DataFrame(cv, index=['CV (%)']).T.rename_axis("Variabel"),
                      use_container_width=True)
-    with cb:
+
         st.subheader("Uji Normalitas Shapiro-Wilk (α=0.05)")
-        rows = []
-        for f in FEATURES:
-            stat, p = stats.shapiro(df[f])
-            rows.append({'Variabel': f, 'Statistik': round(stat, 5),
-                         'p-value': round(p, 5),
-                         'Distribusi': 'Normal' if p > 0.05 else 'Tidak Berdistribusi Normal'})
-        df_norm = pd.DataFrame(rows).set_index('Variabel')
-        st.dataframe(df_norm, use_container_width=True)
-        # Cek apakah semua distribusi Normal
-        all_normal = all(r['Distribusi'] == 'Normal' for r in rows)
-        if all_normal:
-            st.caption("→ Semua variabel berdistribusi normal → normalisasi Z-Score tetap digunakan sebelum clustering untuk menyamakan skala.")
+        if len(df_t1) >= 3:
+            rows = []
+            for f in FEATURES:
+                stat, p = stats.shapiro(df_t1[f])
+                rows.append({'Variabel': f, 'Statistik': round(stat, 5),
+                             'p-value': round(p, 5),
+                             'Distribusi': 'Normal' if p > 0.05 else 'Tidak Berdistribusi Normal'})
+            df_norm = pd.DataFrame(rows).set_index('Variabel')
+            st.dataframe(df_norm, use_container_width=True)
+            # Cek apakah semua distribusi Normal
+            all_normal = all(r['Distribusi'] == 'Normal' for r in rows)
+            if all_normal:
+                st.caption("→ Semua variabel berdistribusi normal → normalisasi Z-Score tetap digunakan sebelum clustering untuk menyamakan skala.")
+            else:
+                st.caption("→ Data tidak berdistribusi normal → normalisasi Z-Score tepat digunakan sebelum clustering.")
         else:
-            st.caption("→ Data tidak berdistribusi normal → normalisasi Z-Score tepat digunakan sebelum clustering.")
+            st.info("Data terlalu sedikit (minimal 3 bulan) untuk melakukan uji Shapiro-Wilk.")
 
-    # ── TAMBAHAN 1: HASIL NORMALISASI Z-SCORE ────────────────────
-    st.subheader("Hasil Normalisasi Z-Score")
-    st.caption(
-        "Z-Score = (X − rata-rata) / standar deviasi. "
-        "Nilai 0 berarti sama dengan rata-rata, nilai positif berarti di atas rata-rata, "
-        "dan nilai negatif berarti di bawah rata-rata. Data inilah yang digunakan sebagai "
-        "input proses K-Means Clustering."
-    )
-    df_zscore = pd.DataFrame(
-        X_scaled,
-        columns=[f"{f}_zscore" for f in FEATURES],
-        index=df.index
-    ).round(5)
-    df_zscore.insert(0, 'bulan', df['bulan'].values)
-    df_zscore.insert(0, 'tahun', df['tahun'].values)
-    st.dataframe(df_zscore, use_container_width=True, height=300)
+        # ── TAMBAHAN 1: HASIL NORMALISASI Z-SCORE ────────────────
+        st.subheader("Hasil Normalisasi Z-Score")
+        st.caption(
+            "Z-Score = (X − rata-rata) / standar deviasi. "
+            "Nilai 0 berarti sama dengan rata-rata, nilai positif berarti di atas rata-rata, "
+            "dan nilai negatif berarti di bawah rata-rata. Data inilah yang digunakan sebagai "
+            "input proses K-Means Clustering."
+        )
+        scaler_t1   = StandardScaler()
+        X_scaled_t1 = scaler_t1.fit_transform(df_t1[FEATURES].values)
+        df_zscore = pd.DataFrame(
+            X_scaled_t1,
+            columns=[f"{f}_zscore" for f in FEATURES],
+            index=df_t1.index
+        ).round(5)
+        df_zscore.insert(0, 'bulan', df_t1['bulan'].values)
+        df_zscore.insert(0, 'tahun', df_t1['tahun'].values)
+        st.dataframe(df_zscore, use_container_width=True, height=300)
 
-    st.subheader("Rasio Arus Kas / Pendapatan per Tahun (%)")
-    rasio = df.groupby('tahun').apply(
-        lambda g: round(g['arus_kas_operasi'].sum() / g['pendapatan_operasi'].sum() * 100, 5)
-    ).reset_index(name='Rasio (%)')
-    rasio['Keterangan'] = rasio['Rasio (%)'].apply(lambda r: '⚠️ ANOMALI' if r < 2 else '✅ Normal')
-    st.dataframe(rasio.set_index('tahun'), use_container_width=True)
+        st.subheader("Rasio Arus Kas / Pendapatan per Tahun (%)")
+        rasio = df_t1.groupby('tahun').apply(
+            lambda g: round(g['arus_kas_operasi'].sum() / g['pendapatan_operasi'].sum() * 100, 5)
+        ).reset_index(name='Rasio (%)')
+        rasio['Keterangan'] = rasio['Rasio (%)'].apply(lambda r: '⚠️ ANOMALI' if r < 2 else '✅ Normal')
+        st.dataframe(rasio.set_index('tahun'), use_container_width=True)
 
-    st.subheader("Preview Data")
-    st.dataframe(df_raw, use_container_width=True, height=300)
+        st.subheader("Preview Data")
+        st.dataframe(df_raw[df_raw['tahun'].isin(tahun_pilihan_t1)], use_container_width=True, height=300)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -855,14 +946,14 @@ with tab3:
     # ── TAMBAHAN 2: FILTER TAHUN UNTUK MELIHAT HASIL CLUSTERING ──
     st.subheader("🗂️ Filter Tahun")
     tahun_options = sorted(df['tahun'].unique().tolist())
-    tahun_pilihan = st.multiselect(
+    tahun_pilihan = filter_tahun_pills(
         "Pilih tahun yang ingin ditampilkan pada hasil clustering di bawah ini",
         options=tahun_options,
         default=tahun_options,
         key="filter_tahun_clustering"
     )
 
-    if len(tahun_pilihan) == 0:
+    if not tahun_pilihan:
         st.warning("⚠️ Pilih minimal satu tahun untuk menampilkan hasil clustering.")
         df_view = df.iloc[0:0].copy()
     else:
@@ -880,22 +971,21 @@ with tab3:
         summary_view = pd.DataFrame(columns=['Rata-rata Arus Kas', 'Rata-rata Pendapatan', 'Rata-rata Beban'])
         st.info("Tidak ada data untuk tahun yang dipilih.")
 
-    ca, cb = st.columns(2)
-    with ca:
-        st.subheader("Jumlah Bulan Per Klaster")
-        if len(df_view) > 0:
-            cnt = df_view['klaster'].value_counts().reindex(aktif_view).rename('Jumlah Bulan').to_frame()
-            st.dataframe(cnt, use_container_width=True)
-        else:
-            st.info("Tidak ada data.")
-    with cb:
-        st.subheader("Distribusi Klaster per Tahun")
-        if len(df_view) > 0:
-            cross_view = df_view.groupby(['tahun','klaster']).size().unstack(fill_value=0)
-            cross_view = cross_view.reindex(columns=[n for n in NAMA_K if n in cross_view.columns])
-            st.dataframe(cross_view, use_container_width=True)
-        else:
-            st.info("Tidak ada data.")
+    st.subheader("Jumlah Bulan Per Klaster")
+    if len(df_view) > 0:
+        cnt = df_view['klaster'].value_counts().reindex(aktif_view).rename('Jumlah Bulan').to_frame()
+        st.dataframe(cnt, use_container_width=True)
+    else:
+        st.info("Tidak ada data.")
+
+    st.subheader("Distribusi Klaster per Tahun")
+    if len(df_view) > 0:
+        cross_view = df_view.groupby(['tahun','klaster']).size().unstack(fill_value=0)
+        cross_view = cross_view.reindex(columns=[n for n in NAMA_K if n in cross_view.columns])
+        st.dataframe(cross_view, use_container_width=True)
+    else:
+        st.info("Tidak ada data.")
+
 
     if 2023 in df['tahun'].values:
         st.subheader("Analisis Anomali 2023")
