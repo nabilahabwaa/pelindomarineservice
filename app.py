@@ -139,59 +139,72 @@ st.markdown("""
         font-size: 0.92rem !important;
     }
 
-    /* ── FIX 1: Sidebar file uploader — hilangkan teks drag-drop yg overlap ── */
-    /* Sembunyikan teks "Drag and drop" / "upload" di dalam dropzone,
-       sisakan hanya tombol Browse */
+    /* ── FIX FILE UPLOADER SIDEBAR ── */
+    /* Reset semua style dropzone dulu */
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
-        padding: 10px 8px 10px 8px !important;
-        min-height: 56px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
+        display: block !important;
+        padding: 8px !important;
+        min-height: unset !important;
+        overflow: hidden !important;
     }
-    /* Sembunyikan semua teks langsung di dalam dropzone (drag-drop instruction) */
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div > span,
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div > small {
+    /* Sembunyikan div instruksi drag-drop (anak pertama) */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div:first-child {
         display: none !important;
     }
-    /* Tombol Browse: tampil penuh dan rapi */
+    /* Pastikan hanya tombol Browse yang muncul, tanpa teks double */
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
+        display: block !important;
         width: 100% !important;
         font-size: 0.82rem !important;
-        padding: 6px 8px !important;
+        padding: 6px 10px !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+        position: static !important;
     }
-    /* Info ukuran file (200MB • XLSX) tetap tampil di bawah */
+    /* Tampilkan info ukuran file "200MB • XLSX" */
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"] {
-        display: none !important;
+        display: block !important;
+        text-align: center !important;
+        font-size: 0.75rem !important;
+        color: #888 !important;
+        margin-top: 4px !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"] span {
+        font-size: 0.75rem !important;
     }
 
-    /* ── FIX 2: Expander icon (_arrow_) tidak overlap dengan teks judul ── */
-    /* Streamlit expander pakai pseudo-element / SVG yang kadang bertumpuk
-       saat font diganti; kita atur flex layout-nya agar rapi */
-    [data-testid="stExpander"] summary {
+    /* ── FIX EXPANDER: icon tidak overlap teks judul ── */
+    [data-testid="stExpander"] details summary {
         display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        padding: 10px 6px !important;
+        cursor: pointer !important;
         line-height: 1.5 !important;
-        padding: 8px 4px !important;
+        overflow: visible !important;
     }
-    [data-testid="stExpander"] summary p,
-    [data-testid="stExpander"] summary span {
+    /* Panah / chevron icon */
+    [data-testid="stExpander"] details summary svg {
+        flex: 0 0 18px !important;
+        width: 18px !important;
+        height: 18px !important;
+        margin-top: 2px !important;
+        position: static !important;
+    }
+    /* Teks judul expander */
+    [data-testid="stExpander"] details summary p,
+    [data-testid="stExpander"] details summary span,
+    [data-testid="stExpander"] details summary div {
+        flex: 1 1 auto !important;
         margin: 0 !important;
         padding: 0 !important;
         line-height: 1.5 !important;
         white-space: normal !important;
         word-break: break-word !important;
-    }
-    /* Pastikan icon panah tidak bertumpuk */
-    [data-testid="stExpander"] summary svg {
-        flex-shrink: 0 !important;
-        min-width: 16px !important;
-        min-height: 16px !important;
+        overflow: visible !important;
+        position: static !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1040,7 +1053,6 @@ with tab2:
         idx_K   = list(K_range).index(K) if K in K_range else 0
         sil_K_val = sil_scores[idx_K]
         sil_best_val = max(sil_scores)
-        # REVISI POIN 1: kalimat interpretasi diubah sesuai permintaan
         st.markdown(f"""
 - **Elbow Method** menunjukkan siku paling jelas pada **K = {elbow_k}** (inertia mulai landai di titik ini).
 - Nilai Silhouette Score tertinggi diperoleh pada **K = {sil_best_k}** sebesar **{sil_best_val:.5f}**, sehingga jumlah klaster tersebut dipilih karena memberikan kualitas pengelompokan yang paling optimal.
@@ -1101,18 +1113,14 @@ with tab3:
     else:
         st.info("Tidak ada data.")
 
-    # REVISI POIN 3: Analisis Anomali 2023 hanya muncul saat filter = [2023] saja
-    # atau saat semua tahun dipilih (tidak ada filter spesifik lain)
     semua_tahun = sorted(df['tahun'].unique().tolist())
     tahun_pilihan_sorted = sorted(tahun_pilihan) if tahun_pilihan else []
 
     tampilkan_anomali = False
     if 2023 in df['tahun'].values:
         if tahun_pilihan_sorted == [2023]:
-            # Hanya tahun 2023 yang dipilih
             tampilkan_anomali = True
         elif tahun_pilihan_sorted == semua_tahun:
-            # Semua tahun dipilih
             tampilkan_anomali = True
 
     if tampilkan_anomali:
