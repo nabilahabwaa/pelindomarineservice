@@ -82,17 +82,44 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── CSS TAMBAHAN: FONT LEBIH RAPI & JARAK ANTAR SUB JUDUL ──────
+# ── CSS TAMBAHAN: FONT COURIER & JARAK ANTAR SUB JUDUL ─────────
 st.markdown("""
 <style>
-    html, body, [class*="css"] {
-        font-family: 'Courier New', Courier, monospace;
+    html, body, [class*="css"], .stApp, .stMarkdown, p, span, div,
+    .stDataFrame, .stMetric, .stButton button, .stTextInput input,
+    .stSelectbox, .stNumberInput input, .stCaption, .stTabs {
+        font-family: 'Courier New', Courier, monospace !important;
     }
 
-    h1, h2, h3 {
-        font-family: 'Courier New', Courier, monospace;
-        letter-spacing: 0.3px;
+    h1, h2, h3, h4 {
+        font-family: 'Courier New', Courier, monospace !important;
+        letter-spacing: 0.5px;
         font-weight: 700;
+    }
+
+    /* Ukuran font disesuaikan agar tetap nyaman dibaca dengan Courier */
+    h1 { font-size: 1.7rem !important; }
+    h2 { font-size: 1.4rem !important; }
+    h3 { font-size: 1.15rem !important; }
+
+    p, span, label, div, .stMarkdown, .stCaption {
+        font-size: 0.92rem !important;
+        line-height: 1.55 !important;
+    }
+
+    .stCaption, [data-testid="stCaptionContainer"] {
+        font-size: 0.8rem !important;
+    }
+
+    .stDataFrame, .stDataFrame * {
+        font-size: 0.85rem !important;
+    }
+
+    [data-testid="stMetricValue"] {
+        font-size: 1.3rem !important;
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 0.82rem !important;
     }
 
     /* Jarak & garis pemisah tipis antar sub judul agar tidak rapat */
@@ -111,7 +138,8 @@ st.markdown("""
     /* Tampilan tombol filter tahun (pills) */
     div[data-testid="stPills"] button {
         border-radius: 20px !important;
-        font-weight: 500 !important;
+        font-weight: 700 !important;
+        font-size: 0.85rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
