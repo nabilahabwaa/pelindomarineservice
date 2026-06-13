@@ -82,6 +82,38 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── CSS TAMBAHAN UNTUK FONT HELVETICA ────
+st.markdown("""
+<style>
+html, body, .stApp {
+    font-family: Helvetica, Arial, sans-serif !important;
+}
+
+/* Markdown */
+.stMarkdown {
+    font-family: Helvetica, Arial, sans-serif !important;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    font-family: Helvetica, Arial, sans-serif !important;
+}
+
+/* Input */
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox,
+.stTextArea textarea {
+    font-family: Helvetica, Arial, sans-serif !important;
+}
+
+/* Button */
+.stButton button {
+    font-family: Helvetica, Arial, sans-serif !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ── CSS TAMBAHAN UNTUK HALAMAN LOGIN/LUPA PASSWORD/REGISTER ────
 LOGIN_THEME_CSS = """
 <style>
