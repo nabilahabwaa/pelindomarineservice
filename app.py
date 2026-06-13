@@ -139,55 +139,38 @@ st.markdown("""
         font-size: 0.92rem !important;
     }
 
-/* ===== FIX FILE UPLOADER SIDEBAR ===== */
+# ── SIDEBAR ───────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("""
+    <div style='background:linear-gradient(160deg,#0a3d62,#1a6fa8);
+                border-radius:10px; padding:20px 16px; margin-bottom:4px; text-align:center'>
+        <div style='font-size:36px; margin-bottom:8px'>🚢</div>
+        <div style='font-size:11px; color:#aed6f1; letter-spacing:2px; font-weight:700; margin-bottom:4px'>
+            PT PELINDO MARINE SERVICE
+        </div>
+        <div style='width:40px; height:2px; background:#aed6f1; margin:8px auto'></div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.divider()
 
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
-    width: 100% !important;
-}
+    st.header("⚙️ Konfigurasi")
+    uploaded_file = st.file_uploader("Upload file Excel (.xlsx)", type=["xlsx"])
+    sheet_name    = st.text_input("Nama sheet", value="bulanan")
+    K             = st.number_input("Jumlah Klaster (K)", min_value=2, max_value=8, value=4)
 
-section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
-    min-height: 60px !important;
-    padding: 8px !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-}
-
-/* sembunyikan semua teks bawaan uploader */
-section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] p,
-section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] span,
-section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] small {
-    display: none !important;
-}
-
-/* tampilkan tombol browse dengan normal */
-section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
-    display: block !important;
-    width: 100% !important;
-    min-height: 36px !important;
-    font-size: 13px !important;
-}
-
-/* ===== FIX EXPANDER ===== */
-
-details[data-testid="stExpander"] summary {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    line-height: 1.5 !important;
-}
-
-details[data-testid="stExpander"] summary p {
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-details[data-testid="stExpander"] summary svg {
-    flex-shrink: 0 !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
+    st.divider()
+    st.markdown("**Preview Klaster**")
+    COLORS = get_colors(K)
+    NAMA_K = get_nama_klaster(K)
+    for nm in NAMA_K:
+        warna = COLORS[nm]
+        st.markdown(
+            f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+            f'<div style="width:14px;height:14px;border-radius:3px;background:{warna}"></div>'
+            f'<span style="font-size:13px">{nm}</span></div>',
+            unsafe_allow_html=True
+        )
+    st.divider()
 
 # ── CSS TAMBAHAN UNTUK HALAMAN LOGIN/LUPA PASSWORD/REGISTER ────
 LOGIN_THEME_CSS = """
