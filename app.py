@@ -82,24 +82,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── CSS TAMBAHAN: FONT INTER (PROFESIONAL) & JARAK ANTAR SUB JUDUL ─────────
+# ── CSS TAMBAHAN: FONT HELVETICA & JARAK ANTAR SUB JUDUL ─────────
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
     html, body, [class*="css"], .stApp, .stMarkdown, p, span, div,
     .stDataFrame, .stMetric, .stButton button, .stTextInput input,
     .stSelectbox, .stNumberInput input, .stCaption, .stTabs {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: Helvetica, Arial, -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
     h1, h2, h3, h4 {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: Helvetica, Arial, -apple-system, BlinkMacSystemFont, sans-serif !important;
         letter-spacing: -0.3px;
         font-weight: 700;
     }
 
-    /* Ukuran font disesuaikan agar nyaman dibaca */
     h1 { font-size: 1.8rem !important; }
     h2 { font-size: 1.45rem !important; }
     h3 { font-size: 1.2rem !important; }
@@ -125,7 +122,6 @@ st.markdown("""
         font-size: 0.88rem !important;
     }
 
-    /* Jarak & garis pemisah tipis antar sub judul agar tidak rapat */
     div[data-testid="stVerticalBlock"] h3 {
         margin-top: 2rem;
         margin-bottom: 0.9rem;
@@ -133,32 +129,66 @@ st.markdown("""
         border-bottom: 1px solid #eef2f7;
     }
 
-    /* Sub judul pertama dalam sebuah tab tidak perlu jarak atas yang besar */
     div[data-testid="stTabContent"] > div > div[data-testid="stVerticalBlock"] > div:first-child h3 {
         margin-top: 0.4rem;
     }
 
-    /* Tampilan tombol filter tahun (pills) */
     div[data-testid="stPills"] button {
         border-radius: 20px !important;
         font-weight: 600 !important;
         font-size: 0.92rem !important;
     }
+
+    /* FIX: Sidebar upload widget overlap */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+        width: 100% !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div {
+        width: 100% !important;
+        overflow: hidden !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] label {
+        white-space: normal !important;
+        word-break: break-word !important;
+        font-size: 0.82rem !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] small {
+        font-size: 0.78rem !important;
+        display: block !important;
+        white-space: normal !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] span {
+        font-size: 0.82rem !important;
+        white-space: normal !important;
+        overflow-wrap: break-word !important;
+    }
+    /* Fix stacked text on Browse Files button */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
+        padding: 12px 8px !important;
+        min-height: 70px !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] > div {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    section[data-testid="stSidebar"] button[data-testid="stBaseButton-secondary"] {
+        font-size: 0.80rem !important;
+        padding: 4px 10px !important;
+        white-space: nowrap !important;
+        min-width: 80px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ── CSS TAMBAHAN UNTUK HALAMAN LOGIN/LUPA PASSWORD/REGISTER ────
-# Desain: background putih bersih, kotak form biru solid profesional
 LOGIN_THEME_CSS = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-    /* Background halaman: putih bersih */
     .stApp {
         background: #f0f4f8 !important;
     }
 
-    /* Kotak form: biru solid dengan shadow elegan */
     div[data-testid="stForm"] {
         background: #0a3d62 !important;
         border-radius: 20px !important;
@@ -168,23 +198,21 @@ LOGIN_THEME_CSS = """
         border-left: 6px solid #2980b9 !important;
     }
 
-    /* Label teks di dalam form: putih */
     div[data-testid="stForm"] p,
     div[data-testid="stForm"] label,
     div[data-testid="stForm"] strong,
     div[data-testid="stForm"] span {
         color: #e8f4fd !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: Helvetica, Arial, sans-serif !important;
         font-weight: 500 !important;
     }
 
-    /* Input field: putih dengan border biru muda saat fokus */
     div[data-testid="stForm"] input {
         background-color: #ffffff !important;
         color: #1a252f !important;
         border-radius: 10px !important;
         border: 1.5px solid #aed6f1 !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: Helvetica, Arial, sans-serif !important;
         font-size: 0.95rem !important;
         padding: 10px 14px !important;
     }
@@ -193,7 +221,6 @@ LOGIN_THEME_CSS = """
         box-shadow: 0 0 0 3px rgba(41,128,185,0.15) !important;
     }
 
-    /* Tombol utama (Masuk / Daftar / Cari Password): biru terang */
     div[data-testid="stForm"] button[kind="primary"],
     .stButton button[kind="primary"] {
         background-color: #2980b9 !important;
@@ -202,7 +229,7 @@ LOGIN_THEME_CSS = """
         border-radius: 10px !important;
         font-weight: 600 !important;
         font-size: 0.95rem !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: Helvetica, Arial, sans-serif !important;
         letter-spacing: 0.3px !important;
         padding: 10px 0 !important;
         transition: background 0.2s !important;
@@ -213,14 +240,13 @@ LOGIN_THEME_CSS = """
         border-color: #1a6fa8 !important;
     }
 
-    /* Tombol sekunder (Lupa Password, Buat Akun Baru, Kembali): putih */
     .stButton button:not([kind="primary"]) {
         border: 1.5px solid #2980b9 !important;
         color: #0a3d62 !important;
         background-color: #ffffff !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: Helvetica, Arial, sans-serif !important;
     }
     .stButton button:not([kind="primary"]):hover {
         background-color: #eaf4fb !important;
@@ -229,7 +255,7 @@ LOGIN_THEME_CSS = """
 
     .login-title, h1, h2, h3 {
         color: #0a3d62 !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: Helvetica, Arial, sans-serif !important;
     }
 </style>
 """
@@ -398,7 +424,6 @@ def tampilkan_footer():
 #  ROUTER
 # ══════════════════════════════════════════════════════════════
 if not st.session_state['logged_in']:
-    # Terapkan tema warna khusus (navy + putih) untuk halaman login/lupa password/register
     st.markdown(LOGIN_THEME_CSS, unsafe_allow_html=True)
     if st.session_state['page'] == 'forgot':
         halaman_lupa_password()
@@ -483,6 +508,19 @@ def load_data(file, sheet):
                 f"Nilai bulan yang valid: `{', '.join(BULAN_ORDER)}`"
             )
 
+        # ── DETEKSI & BERSIHKAN MISSING VALUE ──────────────────
+        missing_mask = df[FEATURES].isnull().any(axis=1)
+        n_missing = missing_mask.sum()
+        if n_missing > 0:
+            missing_detail = df[missing_mask][['tahun', 'bulan'] + FEATURES]
+            st.warning(
+                f"⚠️ **Ditemukan {n_missing} baris dengan nilai kosong (missing value).** "
+                f"Baris tersebut telah dihapus secara otomatis agar proses clustering berjalan dengan baik."
+            )
+            with st.expander(f"📋 Lihat detail {n_missing} baris yang dihapus"):
+                st.dataframe(missing_detail, use_container_width=True)
+            df = df[~missing_mask].copy()
+
         if len(df) == 0:
             raise ValueError("File berhasil dibaca, tetapi **tidak ada baris data** yang valid setelah filter.")
 
@@ -494,19 +532,20 @@ def load_data(file, sheet):
         raise ValueError(f"Gagal membaca file Excel: **{str(e)}**\n\nPastikan file tidak rusak dan berformat `.xlsx`.")
 
 def run_clustering(df, k):
+    # Pastikan tidak ada NaN sebelum clustering
+    df_clean = df.dropna(subset=FEATURES).copy()
     scaler   = StandardScaler()
-    X_scaled = scaler.fit_transform(df[FEATURES].values)
+    X_scaled = scaler.fit_transform(df_clean[FEATURES].values)
     km       = KMeans(n_clusters=k, random_state=42, n_init=10)
-    df       = df.copy()
-    df['klaster_raw'] = km.fit_predict(X_scaled)
-    means     = df.groupby('klaster_raw')['arus_kas_operasi'].mean()
+    df_clean['klaster_raw'] = km.fit_predict(X_scaled)
+    means     = df_clean.groupby('klaster_raw')['arus_kas_operasi'].mean()
     rank      = means.rank(ascending=False).astype(int)
     nama      = get_nama_klaster(k)
     label_map = {c: nama[r-1] for c, r in rank.items()}
-    df['klaster'] = df['klaster_raw'].map(label_map)
+    df_clean['klaster'] = df_clean['klaster_raw'].map(label_map)
     sil     = silhouette_score(X_scaled, km.labels_)
     inertia = km.inertia_
-    return df, X_scaled, sil, inertia
+    return df_clean, X_scaled, sil, inertia
 
 
 # ══════════════════════════════════════════════════════════════
@@ -569,8 +608,6 @@ def generate_analysis_text(df_view, summary_view, sil, aktif_view):
 #  HELPER: FILTER TAHUN BERGAYA TOMBOL (PILLS) DENGAN FALLBACK
 # ══════════════════════════════════════════════════════════════
 def filter_tahun_pills(label, options, default, key):
-    """Filter tahun ala tombol klik (st.pills). Jika versi Streamlit
-    belum mendukung st.pills, otomatis jatuh ke st.multiselect."""
     if hasattr(st, "pills"):
         return st.pills(
             label,
@@ -793,6 +830,17 @@ else:
         tampilkan_footer()
         st.stop()
 
+# ── Bersihkan missing value pada data manual juga ─────────────
+if use_manual_data:
+    missing_mask_manual = df_raw[FEATURES].isnull().any(axis=1)
+    n_missing_manual = missing_mask_manual.sum()
+    if n_missing_manual > 0:
+        st.warning(
+            f"⚠️ **Ditemukan {n_missing_manual} baris dengan nilai kosong (missing value) pada data manual.** "
+            f"Baris tersebut telah dihapus secara otomatis."
+        )
+        df_raw = df_raw[~missing_mask_manual].copy()
+
 df, X_scaled, sil, inertia_terpilih = run_clustering(df_raw, K)
 COLORS = get_colors(K)
 NAMA_K = get_nama_klaster(K)
@@ -807,7 +855,6 @@ with tab1:
         st.info("📋 Menggunakan **data manual** yang diinput di tab Input Manual.")
     st.subheader("Ringkasan Data")
 
-    # ── FILTER TAHUN (klik/pencet) ───────────────────────────────
     st.markdown("**Filter Tahun**")
     tahun_options_t1 = sorted(df['tahun'].unique().tolist())
     tahun_pilihan_t1 = filter_tahun_pills(
@@ -852,7 +899,6 @@ with tab1:
                              'Distribusi': 'Normal' if p > 0.05 else 'Tidak Berdistribusi Normal'})
             df_norm = pd.DataFrame(rows).set_index('Variabel')
             st.dataframe(df_norm, use_container_width=True)
-            # Cek apakah semua distribusi Normal
             all_normal = all(r['Distribusi'] == 'Normal' for r in rows)
             if all_normal:
                 st.caption("→ Semua variabel berdistribusi normal → normalisasi Z-Score tetap digunakan sebelum clustering untuk menyamakan skala.")
@@ -861,7 +907,6 @@ with tab1:
         else:
             st.info("Data terlalu sedikit (minimal 3 bulan) untuk melakukan uji Shapiro-Wilk.")
 
-        # ── TAMBAHAN 1: HASIL NORMALISASI Z-SCORE ────────────────
         st.subheader("Hasil Normalisasi Z-Score")
         st.caption(
             "Z-Score = (X − rata-rata) / standar deviasi. "
@@ -899,7 +944,6 @@ with tab2:
 
     n_samples = len(df_raw)
 
-    # Validasi: data minimal harus ada cukup baris untuk K
     if n_samples < 4:
         st.warning(f"⚠️ Data terlalu sedikit ({n_samples} baris) untuk analisis K optimal. Minimal diperlukan 4 baris data.")
         st.stop()
@@ -907,7 +951,6 @@ with tab2:
     scaler_opt = StandardScaler()
     Xs_opt     = scaler_opt.fit_transform(df_raw[FEATURES].values)
 
-    # Batasi K_range agar tidak melebihi jumlah sampel
     max_k      = min(8, n_samples - 1)
     K_range    = range(2, max_k + 1)
 
@@ -923,14 +966,12 @@ with tab2:
             km     = KMeans(n_clusters=k, random_state=42, n_init=10)
             labels = km.fit_predict(Xs_opt)
             inertia_list.append(km.inertia_)
-            # FIX: tangkap error silhouette_score jika klaster tidak valid
             try:
                 sil_val = silhouette_score(Xs_opt, labels)
             except ValueError:
                 sil_val = 0.0
             sil_scores.append(sil_val)
 
-    # Deteksi elbow otomatis
     ia   = np.array(inertia_list)
     kv   = np.array(list(K_range))
     p1, p2 = np.array([kv[0], ia[0]]), np.array([kv[-1], ia[-1]])
@@ -939,7 +980,6 @@ with tab2:
     elbow_k    = int(kv[np.argmax(dists)])
     sil_best_k = list(K_range)[sil_scores.index(max(sil_scores))]
 
-    # Tabel metrik dengan 5 desimal
     metrics_df = pd.DataFrame({
         'K': list(K_range),
         'Inertia (SSE)': [round(v, 5) for v in inertia_list],
@@ -952,7 +992,6 @@ with tab2:
     c2.metric("Silhouette tertinggi", f"K = {sil_best_k} ({max(sil_scores):.5f})")
     c3.metric("K yang digunakan",     f"K = {K}")
 
-    # Grafik: Elbow + Silhouette (2 panel)
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
     fig.patch.set_facecolor('#FAFAFA')
 
@@ -985,11 +1024,13 @@ with tab2:
 
     with st.expander("📝 Interpretasi pemilihan K"):
         idx_K   = list(K_range).index(K) if K in K_range else 0
-        selisih = round(max(sil_scores) - sil_scores[idx_K], 5)
+        sil_K_val = sil_scores[idx_K]
+        sil_best_val = max(sil_scores)
+        # REVISI POIN 1: kalimat interpretasi diubah sesuai permintaan
         st.markdown(f"""
 - **Elbow Method** menunjukkan siku paling jelas pada **K = {elbow_k}** (inertia mulai landai di titik ini).
-- **Silhouette Score** tertinggi ada di **K = {sil_best_k}** ({max(sil_scores):.5f}), namun K = {K} ({sil_scores[idx_K]:.5f}) tidak berbeda jauh (selisih {selisih:.5f}).
-- **K = {K}** dipilih karena menghasilkan {K} klaster yang dapat diinterpretasikan secara manajerial: {", ".join(NAMA_K)}.
+- Nilai Silhouette Score tertinggi diperoleh pada **K = {sil_best_k}** sebesar **{sil_best_val:.5f}**, sehingga jumlah klaster tersebut dipilih karena memberikan kualitas pengelompokan yang paling optimal.
+- **K = {K}** menghasilkan {K} klaster yang dapat diinterpretasikan secara manajerial: {", ".join(NAMA_K)}.
         """)
 
 
@@ -1004,7 +1045,6 @@ with tab3:
     c2.metric("Elbow — Inertia (SSE)", f"{inertia_terpilih:,.5f}",
               help="Jumlah kuadrat jarak tiap titik ke pusat klasternya; makin kecil makin kompak")
 
-    # ── TAMBAHAN 2: FILTER TAHUN UNTUK MELIHAT HASIL CLUSTERING ──
     st.subheader("🗂️ Filter Tahun")
     tahun_options = sorted(df['tahun'].unique().tolist())
     tahun_pilihan = filter_tahun_pills(
@@ -1047,8 +1087,21 @@ with tab3:
     else:
         st.info("Tidak ada data.")
 
+    # REVISI POIN 3: Analisis Anomali 2023 hanya muncul saat filter = [2023] saja
+    # atau saat semua tahun dipilih (tidak ada filter spesifik lain)
+    semua_tahun = sorted(df['tahun'].unique().tolist())
+    tahun_pilihan_sorted = sorted(tahun_pilihan) if tahun_pilihan else []
 
+    tampilkan_anomali = False
     if 2023 in df['tahun'].values:
+        if tahun_pilihan_sorted == [2023]:
+            # Hanya tahun 2023 yang dipilih
+            tampilkan_anomali = True
+        elif tahun_pilihan_sorted == semua_tahun:
+            # Semua tahun dipilih
+            tampilkan_anomali = True
+
+    if tampilkan_anomali:
         st.subheader("Analisis Anomali 2023")
         df23   = df[df['tahun']==2023]
         r23    = df23['arus_kas_operasi'].mean() / df23['pendapatan_operasi'].mean() * 100
@@ -1064,7 +1117,6 @@ with tab3:
     st.dataframe(df_view[['tahun','bulan','arus_kas_operasi','pendapatan_operasi',
                       'beban_operasi','klaster']], use_container_width=True, height=350)
 
-    # ── TAMBAHAN 3: ANALISIS HASIL CLUSTERING ────────────────────
     st.subheader("📊 Analisis Hasil Clustering")
     if len(df_view) > 0:
         st.markdown(generate_analysis_text(df_view, summary_view, sil, aktif_view))
@@ -1175,7 +1227,6 @@ with tab4:
 with tab5:
     st.subheader("Export Hasil")
 
-    # ── FILTER TAHUN UNTUK EXPORT ────────────────────────────────
     st.markdown("**Filter Tahun**")
     tahun_options_export = sorted(df['tahun'].unique().tolist())
     tahun_pilihan_export = filter_tahun_pills(
@@ -1230,5 +1281,5 @@ with tab_logout:
             st.session_state['page']         = 'login'
             st.rerun()
 
-# ── TAMBAHAN 4: FOOTER DASHBOARD ──────────────────────────────
+# ── FOOTER DASHBOARD ──────────────────────────────────────────
 tampilkan_footer()
