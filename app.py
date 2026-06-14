@@ -1048,8 +1048,11 @@ with tab3:
             st.warning("⚠️ Tahun 2023 menunjukkan anomali: pendapatan tertinggi namun arus kas operasi sangat rendah.")
 
     st.subheader("Data Hasil Clustering")
-    st.dataframe(df_view[['tahun','bulan','arus_kas_operasi','pendapatan_operasi',
-                      'beban_operasi','klaster']], use_container_width=True, height=350)
+    df_view_display = df_view[['tahun','bulan','arus_kas_operasi','pendapatan_operasi',
+                                 'beban_operasi','klaster']].copy()
+    for col in FEATURES:
+        df_view_display[col] = (df_view_display[col] / 1000).round(3)
+    st.dataframe(df_view_display, use_container_width=True, height=350)
 
     st.subheader("📊 Analisis Hasil Clustering")
     if len(df_view) > 0:
