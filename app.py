@@ -865,8 +865,10 @@ with tab1:
         st.dataframe(rasio.set_index('tahun'), use_container_width=True)
 
         st.subheader("Preview Data")
-        st.dataframe(df_raw[df_raw['tahun'].isin(tahun_pilihan_t1)], use_container_width=True, height=300)
-
+        df_preview = df_raw[df_raw['tahun'].isin(tahun_pilihan_t1)].copy()
+        for col in FEATURES:
+            df_preview[col] = (df_preview[col] / 1000).round(5)
+        st.dataframe(df_preview, use_container_width=True, height=300)
 
 # ═══════════════════════════════════════════════════════════════
 # TAB 2 — PENENTUAN K OPTIMAL
