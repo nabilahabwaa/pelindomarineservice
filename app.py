@@ -1179,6 +1179,8 @@ with tab5:
         st.warning("⚠️ Pilih minimal satu tahun untuk melakukan export.")
     else:
         out_df = df[df['tahun'].isin(tahun_pilihan_export)][out_cols].copy()
+        for col in FEATURES:
+            out_df[col] = (out_df[col] / 1000).round(3)
 
         st.caption(f"Menampilkan **{len(out_df)} baris** dari tahun yang dipilih: {', '.join(str(t) for t in sorted(tahun_pilihan_export))}")
         st.dataframe(out_df, use_container_width=True)
