@@ -867,7 +867,7 @@ with tab1:
         st.subheader("Preview Data")
         df_preview = df_raw[df_raw['tahun'].isin(tahun_pilihan_t1)].copy()
         for col in FEATURES:
-            df_preview[col] = (df_preview[col] / 1000).round(5)
+            df_preview[col] = (df_preview[col] / 1000).round(4)
         st.dataframe(df_preview, use_container_width=True, height=300)
 
 # ═══════════════════════════════════════════════════════════════
