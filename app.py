@@ -906,11 +906,22 @@ with tab2:
                 sil_val = 0.0
             sil_scores.append(sil_val)
 
-    ia   = np.array(inertia_list)
-    kv   = np.array(list(K_range))
+    ia = np.array(inertia_list)
+    kv = np.array(list(K_range))
     p1, p2 = np.array([kv[0], ia[0]]), np.array([kv[-1], ia[-1]])
-    dists  = [np.abs(np.cross(p2-p1, p1-np.array([kv[i], ia[i]]))) / np.linalg.norm(p2-p1)
-              for i in range(len(kv))]
+
+    # NOTE: np.cross() untuk vektor 2D sudah TIDAK didukung di NumPy 2.0+
+    # (cross product 2D dihapus, hanya untuk vektor 3D). Karena itu dihitung
+    # manual memakai rumus cross product 2D: a x b = a[0]*b[1] - a[1]*b[0]
+    def _cross2d(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    garis_vec = p2 - p1
+    norm_garis = np.linalg.norm(garis_vec)
+    dists = [
+        np.abs(_cross2d(garis_vec, p1 - np.array([kv[i], ia[i]]))) / norm_garis
+        for i in range(len(kv))
+    ]
     elbow_k    = int(kv[np.argmax(dists)])
     sil_best_k = list(K_range)[sil_scores.index(max(sil_scores))]
 
