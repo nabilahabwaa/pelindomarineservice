@@ -814,10 +814,13 @@ with tab1:
         c4.metric("Jumlah Tahun",     df_t1['tahun'].nunique())
 
         st.subheader("Statistik Deskriptif (juta Rp)")
-        desc = df_t1[FEATURES].describe().round(5)
+        desc = df_t1[FEATURES].describe().round(4)
         desc.index = ['Jumlah','Rata-rata','Std Dev','Min','Q1','Median','Q3','Maks']
-        st.dataframe(desc, use_container_width=True)
-
+        st.dataframe(
+            desc.style.format("{",.4f}"), 
+            use_container_width=True
+            )
+    
         st.subheader("Koefisien Variasi (%)")
         cv = {f: round((df_t1[f].std()/df_t1[f].mean())*100, 5) for f in FEATURES}
         st.dataframe(pd.DataFrame(cv, index=['CV (%)']).T.rename_axis("Variabel"),
@@ -855,7 +858,7 @@ with tab1:
             X_scaled_t1,
             columns=[f"{f}_zscore" for f in FEATURES],
             index=df_t1.index
-        ).round(5)
+        ).round(4)
         df_zscore.insert(0, 'bulan', df_t1['bulan'].values)
         df_zscore.insert(0, 'tahun', df_t1['tahun'].values)
         st.dataframe(df_zscore, use_container_width=True, height=300)
