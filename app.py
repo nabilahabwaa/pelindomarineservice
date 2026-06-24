@@ -817,7 +817,7 @@ with tab1:
         desc = df_t1[FEATURES].describe().round(4)
         desc.index = ['Jumlah','Rata-rata','Std Dev','Min','Q1','Median','Q3','Maks']
         st.dataframe(
-            desc.style.format("{",.4f}"), 
+            desc.style.format("{:,.4f}"), 
             use_container_width=True
             )
     
