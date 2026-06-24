@@ -885,8 +885,9 @@ with tab2:
         st.warning(f"⚠️ Data terlalu sedikit ({n_samples} baris) untuk analisis K optimal. Minimal diperlukan 4 baris data.")
         st.stop()
 
-    scaler_opt = StandardScaler()
-    Xs_opt     = scaler_opt.fit_transform(df_raw[FEATURES].values)
+    X_arr_opt  = df_raw[FEATURES].values.astype(float)
+    std_opt    = X_arr_opt.std(axis=0, ddof=1)
+    Xs_opt     = (X_arr_opt - X_arr_opt.mean(axis=0)) / std_opt
 
     max_k      = min(8, n_samples - 1)
     K_range    = range(2, max_k + 1)
