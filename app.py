@@ -466,8 +466,10 @@ def load_data(file, sheet):
 def run_clustering(df, k):
     # Pastikan tidak ada NaN sebelum clustering
     df_clean = df.dropna(subset=FEATURES).copy()
-    scaler   = StandardScaler()
-    X_scaled = scaler.fit_transform(df_clean[FEATURES].values)
+    scaler   = StandardScaler(with_std=False)  # matikan built-in std
+    X_arr    = df_clean[FEATURES].values.astype(float)
+    std_s    = X_arr.std(axis=0, ddof=1)      # sample std (ddof=1)
+    X_scaled = (X_arr - X_arr.mean(axis=0)) / std_s
     km       = KMeans(n_clusters=k, random_state=42, n_init=10)
     df_clean['klaster_raw'] = km.fit_predict(X_scaled)
     means     = df_clean.groupby('klaster_raw')['arus_kas_operasi'].mean()
@@ -846,8 +848,9 @@ with tab1:
             "dan nilai negatif berarti di bawah rata-rata. Data inilah yang digunakan sebagai "
             "input proses K-Means Clustering."
         )
-        scaler_t1   = StandardScaler()
-        X_scaled_t1 = scaler_t1.fit_transform(df_t1[FEATURES].values)
+        X_arr_t1    = df_t1[FEATURES].values.astype(float)
+        std_t1      = X_arr_t1.std(axis=0, ddof=1)
+        X_scaled_t1 = (X_arr_t1 - X_arr_t1.mean(axis=0)) / std_t1
         df_zscore = pd.DataFrame(
             X_scaled_t1,
             columns=[f"{f}_zscore" for f in FEATURES],
